@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  lexigeek-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lexigeek-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - main
+
+networks:
+  main:
+  
+volumes:
+  db_data:
