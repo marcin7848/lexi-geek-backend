@@ -44,9 +44,16 @@ jobs:
 
       - name: Deploy image on the server
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           port: ${{ secrets.SERVER_PORT }}
-          script: whoami
+          envs: IMAGE
+          script: |
+            docker pull ${{ steps.meta.outputs.tags }}
+            docker stop ${{ env.IMAGE_NAME }} || true
+            docker rm ${{ env.IMAGE_NAME }} || true
+            docker run -d --name ${{ env.IMAGE_NAME }} -p 8080:8080 ${{ steps.meta.outputs.tags }}
