@@ -18,6 +18,7 @@ plugins {
 
 group = 'io.learn'
 version = '0.0.1'
+project.archivesBaseName = 'lexigeek'
 
 java {
     sourceCompatibility = '21'
