@@ -51,7 +51,7 @@ jobs:
 
       - name: Deploy image on the server
         id: deploy
-        if: steps.deploy.outcome == 'success'
+        if: steps.build.outcome == 'success'
         uses: appleboy/ssh-action@v1.0.2
         env:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
