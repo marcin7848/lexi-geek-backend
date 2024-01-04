@@ -6,6 +6,9 @@ on:
       - 'main'
 
 env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_IMAGE_NAME: ${{ github.event.repository.name }}
   SERVER_HOST: ${{ secrets.SERVER_HOST }}
   SERVER_PORT: ${{ secrets.SERVER_PORT }}
   SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
@@ -14,9 +17,6 @@ env:
   POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
   POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
   POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  DOCKER_IMAGE_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build-push-deploy-image:
