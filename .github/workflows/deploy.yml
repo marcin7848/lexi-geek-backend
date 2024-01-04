@@ -54,4 +54,4 @@ jobs:
             docker pull ${{ steps.meta.outputs.tags }}
             docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
             docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
-            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8080:8080 ${{ steps.meta.outputs.tags }}
+            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8000:8000 ${{ steps.meta.outputs.tags }}

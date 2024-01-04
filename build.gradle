@@ -2,6 +2,10 @@ buildscript {
     ext {
         springBootVersion = "3.2.1"
         lombokVersion = "1.18.30"
+        postgresVersion = "42.7.1"
+        liquibaseVersion = "4.25.1"
+        jUnitVersion = "5.10.1"
+        archUnitVersion = "1.2.1"
     }
 }
 
@@ -9,6 +13,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.1'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.liquibase.gradle' version '2.2.1'
 }
 
 group = 'io.learn'
@@ -30,14 +35,26 @@ repositories {
 
 dependencies {
     //spring
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: springBootVersion
 
     //lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+
+    //database
+    implementation group: 'org.postgresql', name: 'postgresql', version: postgresVersion
+    implementation group: 'org.liquibase', name: 'liquibase-core', version: liquibaseVersion
+    liquibaseRuntime group: 'org.liquibase', name: 'liquibase-core', version: liquibaseVersion
+    liquibaseRuntime group: 'org.postgresql', name: 'postgresql', version: postgresVersion
 
     //test
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: jUnitVersion
+    testImplementation group: 'com.tngtech.archunit', name: 'archunit-junit5', version: archUnitVersion
 }
 
 tasks.named('test') {
