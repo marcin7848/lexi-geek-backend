@@ -13,7 +13,6 @@ plugins {
 
 group = 'io.learn'
 version = '0.0.1'
-project.archivesBaseName = 'lexigeek'
 
 java {
     sourceCompatibility = '21'
@@ -27,8 +26,6 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' }
-    maven { url 'https://repo.spring.io/snapshot' }
 }
 
 dependencies {
