@@ -6,6 +6,15 @@ on:
       - 'main'
 
 env:
+  #all secrets. have to be defined in Settings -> Secrets and Variables -> Repository secretes
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
+  SERVER_PORT: ${{ secrets.SERVER_PORT }}
+  SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+  SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   DOCKER_IMAGE_NAME: ${{ github.event.repository.name }}
