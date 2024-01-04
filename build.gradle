@@ -1,14 +1,14 @@
 buildscript {
     ext {
-        vCode = 340
-        springBootVersion = "3.1.5"
+        springBootVersion = "3.2.1"
+        lombokVersion = "1.18.30"
     }
 }
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.0-SNAPSHOT'
-    id 'io.spring.dependency-management' version '1.1.3'
+    id 'org.springframework.boot' version '3.2.1'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'io.learn'
@@ -32,12 +32,14 @@ repositories {
 }
 
 dependencies {
+    //spring
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
 
+    //lombok
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
 
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-
+    //test
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion
 }
 
