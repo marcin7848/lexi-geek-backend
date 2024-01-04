@@ -6,6 +6,15 @@ on:
       - 'main'
 
 env:
+  #all secrets. have to be defined in Settings -> Secrets and Variables -> Repository secretes
+  SERVER_HOST: ${{ secrets.SERVER_HOST }}
+  SERVER_PORT: ${{ secrets.SERVER_PORT }}
+  SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+  SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   DOCKER_IMAGE_NAME: ${{ github.event.repository.name }}
@@ -46,12 +55,12 @@ jobs:
       - name: Deploy image on the server
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: ${{ secrets.SERVER_PORT }}
+          host: ${{ env.SERVER_HOST }}
+          port: ${{ env.SERVER_PORT }}
+          username: ${{ env.SERVER_USERNAME }}
+          password: ${{ env.SERVER_PASSWORD }}ó
           script: |
             docker pull ${{ steps.meta.outputs.tags }}
             docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
             docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
-            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8000:8000 ${{ steps.meta.outputs.tags }}
+            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8000:8000 -e POSTGRES_HOST=${{ env.POSTGRES_HOST }} -e POSTGRES_USERNAME=${{ env.POSTGRES_USERNAME }} -e POSTGRES_PASSWORD=${{ env.POSTGRES_PASSWORD }} -e POSTGRES_DB=${{ env.POSTGRES_DB }} -e SPRING_PROFILES_ACTIVE='docker' ${{ steps.meta.outputs.tags }}
