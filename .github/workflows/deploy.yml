@@ -44,12 +44,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Deploy image on the server
-        uses: appleboy/ssh-action@v1.0.0
         env:
           POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DE: 'lexigeek'
+          POSTGRES_DATABASE: 'lexigeek'
+        uses: appleboy/ssh-action@v1.0.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
@@ -60,4 +60,4 @@ jobs:
             docker pull ${{ steps.meta.outputs.tags }}
             docker stop ${{ env.DOCKER_IMAGE_NAME }} || true
             docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
-            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8000:8000 -e POSTGRES_HOST="$POSTGRES_HOST" -e POSTGRES_USERNAME="$POSTGRES_USERNAME" -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" -e POSTGRES_DATABASE="$POSTGRES_DE" -e SPRING_PROFILES_ACTIVE='docker' ${{ steps.meta.outputs.tags }}
+            docker run -d --name ${{ env.DOCKER_IMAGE_NAME }} -p 8000:8000 -e POSTGRES_HOST="$POSTGRES_HOST" -e POSTGRES_USERNAME="$POSTGRES_USERNAME" -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" -e POSTGRES_DATABASE="$POSTGRES_DATABASE" -e SPRING_PROFILES_ACTIVE='docker' ${{ steps.meta.outputs.tags }}
