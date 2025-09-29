@@ -5,4 +5,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-rootProject.name = 'lexigeek'
+rootProject.name = 'lexi-geek'

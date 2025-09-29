@@ -6,5 +6,5 @@ RUN gradle bootJar
 
 FROM eclipse-temurin:25-jre
 
-COPY --from=builder /build/build/libs/lexigeek-0.0.1.jar /app.jar
+COPY --from=builder /build/build/libs/lexi-geek-0.0.1.jar /app.jar
 CMD ["java", "-jar", "/app.jar"]
