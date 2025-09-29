@@ -1,27 +1,26 @@
 buildscript {
     ext {
-        springBootVersion = "3.2.1"
-        lombokVersion = "1.18.30"
-        postgresVersion = "42.7.1"
-        liquibaseVersion = "4.25.1"
-        jUnitVersion = "5.10.1"
-        archUnitVersion = "1.2.1"
+        springBootVersion = "4.0.0-M3"
+        lombokVersion = "1.18.42"
+        postgresVersion = "42.7.8"
+        jUnitVersion = "6.0.0-RC3"
+        archUnitVersion = "1.4.1"
     }
 }
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.1'
-    id 'io.spring.dependency-management' version '1.1.4'
-    id 'org.liquibase.gradle' version '2.2.1'
+    id 'org.springframework.boot' version '4.0.0-M3'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'io.learn'
 version = '0.0.1'
-project.archivesBaseName = 'lexigeek'
 
 java {
-    sourceCompatibility = '21'
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 
 configurations {
@@ -39,6 +38,7 @@ dependencies {
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: springBootVersion
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-liquibase', version: springBootVersion
 
     //lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
@@ -48,9 +48,6 @@ dependencies {
 
     //database
     implementation group: 'org.postgresql', name: 'postgresql', version: postgresVersion
-    implementation group: 'org.liquibase', name: 'liquibase-core', version: liquibaseVersion
-    liquibaseRuntime group: 'org.liquibase', name: 'liquibase-core', version: liquibaseVersion
-    liquibaseRuntime group: 'org.postgresql', name: 'postgresql', version: postgresVersion
 
     //test
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion

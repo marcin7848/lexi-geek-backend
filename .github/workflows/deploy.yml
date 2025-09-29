@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Checkout repository
         id: check
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Log in to the Container registry
         id: login
@@ -42,7 +42,7 @@ jobs:
       - name: Build and push Docker image
         id: build
         if: steps.meta.outcome == 'success'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
@@ -52,7 +52,7 @@ jobs:
       - name: Deploy image on the server
         id: deploy
         if: steps.build.outcome == 'success'
-        uses: appleboy/ssh-action@v1.0.2
+        uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
