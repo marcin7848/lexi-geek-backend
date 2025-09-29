@@ -1,16 +1,15 @@
 services:
-  lexigeek-backend:
+  lexi-geek-backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: lexigeek-backend
+    container_name: lexi-geek-backend
     ports:
-      - "8080:8080"
+      - "8000:8000"
     networks:
-      - main
+      - shared-network
 
 networks:
-  main:
-  
-volumes:
-  db_data:
+  shared-network:
+    external: true
+    name: shared-network
