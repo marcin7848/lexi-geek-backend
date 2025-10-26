@@ -25,11 +25,12 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                //.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/register").permitAll()
                         .requestMatchers("/login").permitAll()
+                        .requestMatchers("/logout").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
@@ -37,6 +38,7 @@ class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         })
                 )
+                .logout(logout -> logout.logoutUrl("/spring-security-logout"))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

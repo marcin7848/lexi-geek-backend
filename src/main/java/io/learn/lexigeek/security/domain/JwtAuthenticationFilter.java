@@ -34,29 +34,48 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @Nullable final HttpServletResponse response,
                                     @Nullable final FilterChain filterChain) throws ServletException, IOException {
         if (request == null) return;
-        final String token = extractTokenFromCookies(request);
-        if (token != null) {
-            final Optional<String> subjectOpt = JwtUtils.extractSubject(token);
-            if (subjectOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
-                final String email = subjectOpt.get();
-                final AccountDto account = accountFacade.getAccountByEmail(email);
-                final UserDetails userDetails = new User(account.email(), account.password(), Collections.singletonList(new SimpleGrantedAuthority("USER")));
-                final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+        final String accessToken = extractCookie(request, JwtUtils.ACCESS_COOKIE_NAME);
+        Optional<String> subjectOpt = Optional.empty();
+        if (accessToken != null) {
+            subjectOpt = JwtUtils.extractSubject(accessToken);
+        }
+
+        if (subjectOpt.isEmpty()) {
+            final String refreshToken = extractCookie(request, JwtUtils.REFRESH_COOKIE_NAME);
+            if (refreshToken != null) {
+                final Optional<String> refreshSub = JwtUtils.extractSubject(refreshToken);
+                if (refreshSub.isPresent()) {
+                    final String email = refreshSub.get();
+                    final String newAccess = JwtUtils.generateToken(email, 15 * 60);
+                    if (response != null) {
+                        JwtUtils.setAccessCookie(response, newAccess, 15 * 60);
+                    }
+                    subjectOpt = Optional.of(email);
+                }
             }
         }
+
+        if (subjectOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
+            final String email = subjectOpt.get();
+            final AccountDto account = accountFacade.getAccountByEmail(email);
+            final UserDetails userDetails = new User(account.email(), account.password(), Collections.singletonList(new SimpleGrantedAuthority("USER")));
+            final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+
         if (filterChain != null) {
             filterChain.doFilter(request, response);
         }
     }
 
-    private @Nullable String extractTokenFromCookies(HttpServletRequest request) {
+    private @Nullable String extractCookie(HttpServletRequest request, String name) {
         final Cookie[] cookies = request.getCookies();
         if (cookies == null) return null;
         for (final Cookie c : cookies) {
-            if (JwtUtils.COOKIE_NAME.equals(c.getName())) {
+            if (name.equals(c.getName())) {
                 final String v = c.getValue();
                 return (v == null || v.isBlank()) ? null : v;
             }

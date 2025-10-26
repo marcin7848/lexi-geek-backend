@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class AuthService implements AuthFacade {
 
+    private static final int ACCESS_TTL_SECONDS = 15 * 60;
+    private static final int REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60;
+
     private final AuthenticationManager authenticationManager;
 
     @Override
@@ -24,10 +27,23 @@ class AuthService implements AuthFacade {
         try {
             final Authentication authRequest = new UsernamePasswordAuthenticationToken(form.email(), form.password());
             authenticationManager.authenticate(authRequest);
-            final String token = JwtUtils.generateToken(form.email(), 3600);
-            JwtUtils.setAuthCookie(response, token, 3600);
-        } catch (Exception e) {
+
+            final String accessToken = JwtUtils.generateToken(form.email(), ACCESS_TTL_SECONDS);
+            JwtUtils.setAccessCookie(response, accessToken, ACCESS_TTL_SECONDS);
+
+            if (form.rememberMe()) {
+                final String refreshToken = JwtUtils.generateToken(form.email(), REFRESH_TTL_SECONDS);
+                JwtUtils.setRefreshCookie(response, refreshToken, REFRESH_TTL_SECONDS);
+            } else {
+                JwtUtils.clearCookie(response, JwtUtils.REFRESH_COOKIE_NAME);
+            }
+        } catch (final Exception e) {
             throw new BadCredentialsException("Invalid credentials");
         }
+    }
+
+    @Override
+    public void logout(final HttpServletResponse response) {
+        JwtUtils.clearAuthCookies(response);
     }
 }

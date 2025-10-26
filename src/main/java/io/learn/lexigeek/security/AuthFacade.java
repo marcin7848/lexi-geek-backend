@@ -6,4 +6,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface AuthFacade {
 
     void login(final LoginForm form, final HttpServletResponse response);
+
+    void logout(final HttpServletResponse response);
 }
