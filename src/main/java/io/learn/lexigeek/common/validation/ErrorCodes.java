@@ -1,0 +1,22 @@
+package io.learn.lexigeek.common.validation;
+
+public enum ErrorCodes {
+    //GENERAL
+    EXTERNAL_SERVICE_ERROR,
+    GENERAL_ERROR,
+    INTERNAL_SERVER_ERROR,
+    VALIDATION_ERROR,
+
+    //SECURITY
+    INVALID_CREDENTIALS,
+
+
+
+
+    NOT_FOUND,
+    ALREADY_EXISTS,
+    PARSING_ERROR,
+    UNAUTHORIZED,
+    MAPPING_ERROR,
+    PROCESSING_ERROR
+}

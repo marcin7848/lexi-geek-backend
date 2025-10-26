@@ -1,5 +1,6 @@
 package io.learn.lexigeek.security.domain;
 
+import io.learn.lexigeek.common.exception.InvalidCredentialsException;
 import io.learn.lexigeek.security.AuthFacade;
 import io.learn.lexigeek.security.dto.LoginForm;
 import jakarta.servlet.http.HttpServletResponse;
@@ -7,10 +8,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+
+import static io.learn.lexigeek.common.validation.ErrorCodes.INVALID_CREDENTIALS;
 
 @Slf4j
 @Service
@@ -38,7 +40,7 @@ class AuthService implements AuthFacade {
                 JwtUtils.clearCookie(response, JwtUtils.REFRESH_COOKIE_NAME);
             }
         } catch (final Exception e) {
-            throw new BadCredentialsException("Invalid credentials");
+            throw new InvalidCredentialsException(INVALID_CREDENTIALS, e);
         }
     }
 
