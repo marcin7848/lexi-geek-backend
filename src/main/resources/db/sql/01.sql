@@ -7,6 +7,7 @@ CREATE TABLE "accounts"
 (
     id       BIGINT PRIMARY KEY,
     uuid     UUID UNIQUE  NOT NULL,
+    username VARCHAR(255) NOT NULL,
     email    VARCHAR(255) NOT NULL,
     password VARCHAR(72)  NOT NULL
 );

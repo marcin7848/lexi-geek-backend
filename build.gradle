@@ -39,6 +39,12 @@ dependencies {
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-validation', version: springBootVersion
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-liquibase', version: springBootVersion
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: springBootVersion
+
+    // JWT (JJWT)
+    implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.12.6'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.12.6'
+    runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.12.6'
 
     //lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
