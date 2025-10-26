@@ -33,8 +33,8 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @Nullable final HttpServletResponse response,
                                     @Nullable final FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            final String token = authHeader.substring(7);
+        final String token = extractToken(authHeader);
+        if (token != null) {
             final Optional<String> subjectOpt = JtwUtils.extractSubject(token);
             if (subjectOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
                 final String email = subjectOpt.get();
@@ -49,5 +49,15 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (filterChain != null) {
             filterChain.doFilter(request, response);
         }
+    }
+
+    private @Nullable String extractToken(@Nullable String headerValue) {
+        if (headerValue == null) return null;
+        String value = headerValue.trim();
+        final String bearer = "Bearer ";
+        while (value.length() >= bearer.length() && value.regionMatches(true, 0, bearer, 0, bearer.length())) {
+            value = value.substring(bearer.length()).trim();
+        }
+        return value.isEmpty() ? null : value;
     }
 }
