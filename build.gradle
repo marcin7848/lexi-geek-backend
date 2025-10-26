@@ -1,9 +1,9 @@
 buildscript {
     ext {
-        springBootVersion = "4.0.0-M3"
+        springBootVersion = "4.0.0-RC1"
         lombokVersion = "1.18.42"
         postgresVersion = "42.7.8"
-        jUnitVersion = "6.0.0-RC3"
+        jUnitVersion = "6.0.0"
         archUnitVersion = "1.4.1"
         jsonwebtokenVersion = "0.12.6"
     }
@@ -11,7 +11,7 @@ buildscript {
 
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.0.0-M3'
+    id 'org.springframework.boot' version '4.0.0-RC1'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
