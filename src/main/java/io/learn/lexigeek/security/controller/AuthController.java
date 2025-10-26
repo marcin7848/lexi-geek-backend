@@ -3,6 +3,7 @@ package io.learn.lexigeek.security.controller;
 import io.learn.lexigeek.security.AuthFacade;
 import io.learn.lexigeek.security.dto.LoginForm;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ class AuthController {
 
     @PostMapping(Routes.LOGIN)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void login(@RequestBody final LoginForm form, final HttpServletResponse response) {
+    void login(@RequestBody @Valid final LoginForm form, final HttpServletResponse response) {
         authFacade.login(form, response);
     }
 

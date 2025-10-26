@@ -1,6 +1,6 @@
 package io.learn.lexigeek.security.domain;
 
-import io.learn.lexigeek.common.exception.InvalidCredentialsException;
+import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.security.AuthFacade;
 import io.learn.lexigeek.security.dto.LoginForm;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,7 +40,7 @@ class AuthService implements AuthFacade {
                 JwtUtils.clearCookie(response, JwtUtils.REFRESH_COOKIE_NAME);
             }
         } catch (final Exception e) {
-            throw new InvalidCredentialsException(INVALID_CREDENTIALS, e);
+            throw new AuthorizationException(INVALID_CREDENTIALS, e);
         }
     }
 
