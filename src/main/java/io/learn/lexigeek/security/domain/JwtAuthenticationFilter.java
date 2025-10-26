@@ -4,6 +4,7 @@ import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -29,13 +30,13 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AccountFacade accountFacade;
 
     @Override
-    protected void doFilterInternal(final HttpServletRequest request,
+    protected void doFilterInternal(@Nullable final HttpServletRequest request,
                                     @Nullable final HttpServletResponse response,
                                     @Nullable final FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
-        final String token = extractToken(authHeader);
+        if (request == null) return;
+        final String token = extractTokenFromCookies(request);
         if (token != null) {
-            final Optional<String> subjectOpt = JtwUtils.extractSubject(token);
+            final Optional<String> subjectOpt = JwtUtils.extractSubject(token);
             if (subjectOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
                 final String email = subjectOpt.get();
                 final AccountDto account = accountFacade.getAccountByEmail(email);
@@ -51,13 +52,15 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private @Nullable String extractToken(@Nullable String headerValue) {
-        if (headerValue == null) return null;
-        String value = headerValue.trim();
-        final String bearer = "Bearer ";
-        while (value.length() >= bearer.length() && value.regionMatches(true, 0, bearer, 0, bearer.length())) {
-            value = value.substring(bearer.length()).trim();
+    private @Nullable String extractTokenFromCookies(HttpServletRequest request) {
+        final Cookie[] cookies = request.getCookies();
+        if (cookies == null) return null;
+        for (final Cookie c : cookies) {
+            if (JwtUtils.COOKIE_NAME.equals(c.getName())) {
+                final String v = c.getValue();
+                return (v == null || v.isBlank()) ? null : v;
+            }
         }
-        return value.isEmpty() ? null : value;
+        return null;
     }
 }
