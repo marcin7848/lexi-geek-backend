@@ -17,11 +17,7 @@ import org.springframework.stereotype.Service;
 public class AccountService implements AccountFacade {
 
     private static final class LogMessages {
-        private static final String ACCOUNT_CREATED = "Account has been created {}";
-    }
-
-    private static final class ErrorMessages {
-        private static final String ACCOUNT_NOT_FOUND = "Account with email: %s not found";
+        private static final String ACCOUNT_CREATED = "Account has been created with uuid {}";
     }
 
     private final AccountRepository accountRepository;
@@ -37,9 +33,10 @@ public class AccountService implements AccountFacade {
         accountRepository.findByEmail(form.email()).ifPresent(a -> {
             throw new AlreadyExistsException(ErrorCodes.EMAIL_ALREADY_EXISTS, form.email());
         });
+
         final Account account = AccountMapper.formToEntity(form);
         accountRepository.save(account);
-        log.info(LogMessages.ACCOUNT_CREATED, account);
+        log.info(LogMessages.ACCOUNT_CREATED, account.getUuid());
     }
 
     private Account getAccount(final String email) {
