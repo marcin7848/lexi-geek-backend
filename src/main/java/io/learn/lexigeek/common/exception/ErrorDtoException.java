@@ -17,4 +17,10 @@ abstract class ErrorDtoException extends RuntimeException {
         this.error = error;
         this.args = Arrays.asList(args);
     }
+
+    ErrorDtoException(final ErrorCodes error, final Object... args) {
+        super(error.name());
+        this.error = error;
+        this.args = Arrays.asList(args);
+    }
 }

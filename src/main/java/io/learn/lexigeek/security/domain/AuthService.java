@@ -1,8 +1,10 @@
 package io.learn.lexigeek.security.domain;
 
+import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.security.AuthFacade;
 import io.learn.lexigeek.security.dto.LoginForm;
+import io.learn.lexigeek.account.dto.AccountForm;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ class AuthService implements AuthFacade {
     private static final int REFRESH_TTL_SECONDS = 30 * 24 * 60 * 60;
 
     private final AuthenticationManager authenticationManager;
+    private final AccountFacade accountFacade;
 
     @Override
     public void login(final LoginForm form, final HttpServletResponse response) {
@@ -47,5 +50,10 @@ class AuthService implements AuthFacade {
     @Override
     public void logout(final HttpServletResponse response) {
         JwtUtils.clearAuthCookies(response);
+    }
+
+    @Override
+    public void register(final AccountForm form) {
+        accountFacade.createAccount(form);
     }
 }

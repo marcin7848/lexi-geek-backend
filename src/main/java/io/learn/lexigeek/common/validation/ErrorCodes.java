@@ -1,6 +1,10 @@
 package io.learn.lexigeek.common.validation;
 
 public enum ErrorCodes {
+    //ACCOUNT
+    EMAIL_ALREADY_EXISTS,
+    USER_NOT_FOUND,
+
     //GENERAL
     EXTERNAL_SERVICE_ERROR,
     GENERAL_ERROR,
@@ -13,10 +17,4 @@ public enum ErrorCodes {
 
 
 
-    NOT_FOUND,
-    ALREADY_EXISTS,
-    PARSING_ERROR,
-    UNAUTHORIZED,
-    MAPPING_ERROR,
-    PROCESSING_ERROR
 }

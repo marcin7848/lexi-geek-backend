@@ -6,4 +6,8 @@ public class AuthorizationException extends ErrorDtoException {
     public AuthorizationException(final ErrorCodes error, final Throwable cause, final Object... args) {
         super(error, cause, args);
     }
+
+    public AuthorizationException(final ErrorCodes error, final Object... args) {
+        super(error, args);
+    }
 }

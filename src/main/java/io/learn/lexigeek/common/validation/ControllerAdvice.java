@@ -20,21 +20,21 @@ class ControllerAdvice {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ErrorDto notFoundException(final NotFoundException e) {
-        log.warn(e.getMessage());
+        log.warn("{} - {}", e.getMessage(), e.getArgs());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
     @ExceptionHandler(AlreadyExistsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto alreadyExistsException(final AlreadyExistsException e) {
-        log.warn(e.getMessage());
+        log.warn("{} - {}", e.getMessage(), e.getArgs());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
     @ExceptionHandler(AuthorizationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ErrorDto invalidCredentialsException(final AuthorizationException e) {
-        log.warn(e.getMessage());
+        log.warn("{} - {}", e.getMessage(), e.getArgs());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
