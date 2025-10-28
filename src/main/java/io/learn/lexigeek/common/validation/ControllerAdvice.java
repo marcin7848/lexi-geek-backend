@@ -20,35 +20,35 @@ class ControllerAdvice {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ErrorDto notFoundException(final NotFoundException e) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
     @ExceptionHandler(AlreadyExistsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto alreadyExistsException(final AlreadyExistsException e) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
     @ExceptionHandler(AuthorizationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ErrorDto invalidCredentialsException(final AuthorizationException e) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return new ErrorDto(e.getError(), e.getArgs());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto constraintValidationException(final ConstraintViolationException e) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return ErrorDto.from(ErrorCodes.VALIDATION_ERROR, List.of(), e);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto methodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return ErrorDto.from(ErrorCodes.VALIDATION_ERROR, List.of(), e);
     }
 
