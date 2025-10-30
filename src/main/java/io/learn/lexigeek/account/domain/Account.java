@@ -1,4 +1,4 @@
-package io.learn.lexigeek.domain;
+package io.learn.lexigeek.account.domain;
 
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import jakarta.persistence.Column;
@@ -17,9 +17,12 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 class Account extends AbstractUuidEntity {
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "username", nullable = false, length = 20)
+    private String username;
+
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = false, length = 70)
     private String password;
 }
