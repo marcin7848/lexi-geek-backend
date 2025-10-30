@@ -57,7 +57,8 @@ class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (subjectOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
-            final AccountDto account = accountFacade.getLoggedAccount();
+            final String email = subjectOpt.get();
+            final AccountDto account = accountFacade.getAccountByEmail(email);
             final UserDetails userDetails = new User(account.email(), account.password(), Collections.singletonList(new SimpleGrantedAuthority("USER")));
             final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
