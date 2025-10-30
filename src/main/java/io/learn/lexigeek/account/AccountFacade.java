@@ -5,7 +5,7 @@ import io.learn.lexigeek.account.dto.AccountForm;
 
 public interface AccountFacade {
 
-    AccountDto getAccountByEmail(final String email);
+    AccountDto getLoggedAccount();
 
     void createAccount(final AccountForm form);
 }

@@ -1,5 +1,7 @@
 package io.learn.lexigeek.language.domain;
 
+import io.learn.lexigeek.account.AccountFacade;
+import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
@@ -11,30 +13,37 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class LanguageService implements LanguageFacade {
 
     private final LanguageRepository languageRepository;
+    private final LanguageAccountRepository languageAccountRepository;
+    private final AccountFacade accountFacade;
 
     @Override
     public List<LanguageDto> getLanguages() {
-        return languageRepository.findAll().stream()
+        final AccountDto account = accountFacade.getLoggedAccount();
+        return languageRepository.findAllByAccountId(account.id()).stream()
                 .map(LanguageMapper::entityToDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void createLanguage(final LanguageForm form) {
+        final AccountDto accountDto = accountFacade.getLoggedAccount();
         final Language language = LanguageMapper.formToEntity(form);
+        final Account account = languageAccountRepository.findById(accountDto.id())
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, accountDto.id()));
+        language.setAccount(account);
         languageRepository.save(language);
     }
 
     @Override
     public void editLanguage(final UUID uuid, final LanguageForm form) {
-        final Language language = languageRepository.findByUuid(uuid)
+        final AccountDto account = accountFacade.getLoggedAccount();
+        final Language language = languageRepository.findByUuidAndAccountId(uuid, account.id())
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, uuid));
         LanguageMapper.updateEntityFromForm(language, form);
         languageRepository.save(language);
@@ -42,7 +51,8 @@ public class LanguageService implements LanguageFacade {
 
     @Override
     public void deleteLanguage(final UUID uuid) {
-        final Language language = languageRepository.findByUuid(uuid)
+        final AccountDto account = accountFacade.getLoggedAccount();
+        final Language language = languageRepository.findByUuidAndAccountId(uuid, account.id())
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, uuid));
         languageRepository.delete(language);
     }

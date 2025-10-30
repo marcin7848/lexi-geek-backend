@@ -4,11 +4,14 @@ import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.account.dto.AccountForm;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
+import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +28,8 @@ public class AccountService implements AccountFacade {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public AccountDto getAccountByEmail(final String email) {
-        final Account account = getAccount(email);
+    public AccountDto getLoggedAccount() {
+        final Account account = getAccount();
         return AccountMapper.entityToDto(account);
     }
 
@@ -42,7 +45,13 @@ public class AccountService implements AccountFacade {
         log.info(LogMessages.ACCOUNT_CREATED, account.getUuid());
     }
 
-    private Account getAccount(final String email) {
+    private Account getAccount() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AuthorizationException(ErrorCodes.UNAUTHORIZED);
+        }
+
+        final String email = authentication.getName();
         return accountRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, email));
     }

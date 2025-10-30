@@ -28,7 +28,7 @@ class EmailPasswordAuthenticationProvider implements AuthenticationProvider {
         final String email = authentication.getName();
         final String rawPassword = authentication.getCredentials() != null ? authentication.getCredentials().toString() : null;
 
-        final AccountDto account = accountFacade.getAccountByEmail(email);
+        final AccountDto account = accountFacade.getLoggedAccount();
         if (rawPassword == null || !passwordEncoder.matches(rawPassword, account.password())) {
             throw new BadCredentialsException("Invalid credentials");
         }

@@ -4,8 +4,6 @@ import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,7 +19,7 @@ class AccountController {
     private final AccountFacade accountFacade;
 
     @GetMapping(Routes.ACCOUNT)
-    AccountDto getAccount(@AuthenticationPrincipal final UserDetails user) {
-        return accountFacade.getAccountByEmail(user.getUsername());
+    AccountDto getAccount() {
+        return accountFacade.getLoggedAccount();
     }
 }

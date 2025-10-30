@@ -16,4 +16,5 @@ public enum ErrorCodes {
 
     //SECURITY
     INVALID_CREDENTIALS,
+    UNAUTHORIZED,
 }
