@@ -34,6 +34,7 @@ class ControllerAdvice {
     @ExceptionHandler(AuthorizationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ErrorDto invalidCredentialsException(final AuthorizationException e) {
+        log.warn("", e);
         log.warn("{} - {}", e.getMessage(), e.getArgs());
         return new ErrorDto(e.getError(), e.getArgs());
     }

@@ -17,11 +17,10 @@ class AccountMapper {
 
     AccountDto entityToDto(final Account account) {
         return new AccountDto(
+                account.getId(),
                 account.getUuid(),
                 account.getUsername(),
                 account.getEmail(),
                 account.getPassword());
     }
-
-
 }
