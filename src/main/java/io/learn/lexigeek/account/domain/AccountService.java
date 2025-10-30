@@ -34,6 +34,12 @@ public class AccountService implements AccountFacade {
     }
 
     @Override
+    public AccountDto getAccountByEmail(final String email) {
+        final Account account = getAccount(email);
+        return AccountMapper.entityToDto(account);
+    }
+
+    @Override
     public void createAccount(final AccountForm form) {
         accountRepository.findByEmail(form.email()).ifPresent(a -> {
             throw new AlreadyExistsException(ErrorCodes.EMAIL_ALREADY_EXISTS, form.email());
@@ -52,6 +58,10 @@ public class AccountService implements AccountFacade {
         }
 
         final String email = authentication.getName();
+        return getAccount(email);
+    }
+
+    private Account getAccount(final String email) {
         return accountRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, email));
     }

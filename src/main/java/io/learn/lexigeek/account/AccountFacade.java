@@ -7,5 +7,7 @@ public interface AccountFacade {
 
     AccountDto getLoggedAccount();
 
+    AccountDto getAccountByEmail(final String email);
+
     void createAccount(final AccountForm form);
 }
