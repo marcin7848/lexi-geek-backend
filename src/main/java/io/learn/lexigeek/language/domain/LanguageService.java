@@ -19,7 +19,7 @@ import java.util.UUID;
 public class LanguageService implements LanguageFacade {
 
     private final LanguageRepository languageRepository;
-    private final LanguageAccountRepository languageAccountRepository;
+    private final AccountRepository accountRepository;
     private final AccountFacade accountFacade;
 
     @Override
@@ -34,7 +34,7 @@ public class LanguageService implements LanguageFacade {
     public void createLanguage(final LanguageForm form) {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
         final Language language = LanguageMapper.formToEntity(form);
-        final Account account = languageAccountRepository.findById(accountDto.id())
+        final Account account = accountRepository.findById(accountDto.id())
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, accountDto.id()));
         language.setAccount(account);
         languageRepository.save(language);
