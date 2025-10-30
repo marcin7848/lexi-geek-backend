@@ -9,6 +9,7 @@ import io.learn.lexigeek.account.dto.AccountForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,6 +22,7 @@ public class AccountService implements AccountFacade {
     }
 
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public AccountDto getAccountByEmail(final String email) {
@@ -35,6 +37,7 @@ public class AccountService implements AccountFacade {
         });
 
         final Account account = AccountMapper.formToEntity(form);
+        account.setPassword(passwordEncoder.encode(form.password()));
         accountRepository.save(account);
         log.info(LogMessages.ACCOUNT_CREATED, account.getUuid());
     }
