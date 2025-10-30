@@ -1,14 +1,16 @@
 package io.learn.lexigeek.language;
 
+import io.learn.lexigeek.common.pageable.PageDto;
+import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.language.dto.LanguageDto;
+import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface LanguageFacade {
 
-    List<LanguageDto> getLanguages();
+    PageDto<LanguageDto> getLanguages(final LanguageFilterForm form, final PageableRequest pageableRequest);
 
     void createLanguage(final LanguageForm form);
 

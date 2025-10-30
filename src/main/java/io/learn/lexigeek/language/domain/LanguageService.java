@@ -3,15 +3,20 @@ package io.learn.lexigeek.language.domain;
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.common.exception.NotFoundException;
+import io.learn.lexigeek.common.pageable.PageDto;
+import io.learn.lexigeek.common.pageable.PageableRequest;
+import io.learn.lexigeek.common.pageable.PageableUtils;
+import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.language.dto.LanguageDto;
+import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,11 +28,14 @@ public class LanguageService implements LanguageFacade {
     private final AccountFacade accountFacade;
 
     @Override
-    public List<LanguageDto> getLanguages() {
+    public PageDto<LanguageDto> getLanguages(final LanguageFilterForm form, final PageableRequest pageableRequest) {
+        pageableRequest.addDefaultSorts(new SortOrder(Language.Fields.shortcut, Sort.DEFAULT_DIRECTION));
         final AccountDto account = accountFacade.getLoggedAccount();
-        return languageRepository.findAllByAccountId(account.id()).stream()
-                .map(LanguageMapper::entityToDto)
-                .toList();
+
+        final LanguageSpecification specification = new LanguageSpecification(form, account.id());
+
+        return PageableUtils.toDto(languageRepository.findAll(specification, PageableUtils.createPageable(pageableRequest))
+                .map(LanguageMapper::entityToDto), pageableRequest);
     }
 
     @Override

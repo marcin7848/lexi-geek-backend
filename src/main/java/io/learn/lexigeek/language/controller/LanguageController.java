@@ -1,7 +1,10 @@
 package io.learn.lexigeek.language.controller;
 
+import io.learn.lexigeek.common.pageable.PageDto;
+import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.language.dto.LanguageDto;
+import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -33,8 +36,9 @@ class LanguageController {
     private final LanguageFacade languageFacade;
 
     @GetMapping(Routes.LANGUAGES)
-    List<LanguageDto> getLanguages() {
-        return languageFacade.getLanguages();
+    PageDto<LanguageDto> getLanguages(@Valid final LanguageFilterForm form,
+                                      @Valid final PageableRequest pageableRequest) {
+        return languageFacade.getLanguages(form, pageableRequest);
     }
 
     @PostMapping(Routes.LANGUAGES)
