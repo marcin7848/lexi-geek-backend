@@ -1,9 +1,7 @@
 package io.learn.lexigeek.language.domain;
 
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,4 +32,8 @@ class Language extends AbstractUuidEntity {
 
     @Column(name = "special_letters", nullable = false, length = 255)
     private String specialLetters;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id")
+    private Account account;
 }
