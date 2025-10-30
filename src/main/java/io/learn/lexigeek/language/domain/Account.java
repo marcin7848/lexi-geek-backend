@@ -13,7 +13,7 @@ import lombok.Setter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
+@Entity(name = "LanguageAccount")
 @Table(name = "accounts")
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @Getter
