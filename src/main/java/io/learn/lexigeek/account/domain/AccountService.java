@@ -2,10 +2,10 @@ package io.learn.lexigeek.account.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.account.dto.AccountForm;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
-import io.learn.lexigeek.account.dto.AccountForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
