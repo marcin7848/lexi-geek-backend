@@ -7,10 +7,10 @@ CREATE TABLE "languages"
     uuid              UUID UNIQUE  NOT NULL,
     name              VARCHAR(20)  NOT NULL,
     shortcut          VARCHAR(10)  NOT NULL,
-    codeForSpeech     VARCHAR(10)  NOT NULL DEFAULT '',
-    codeForTranslator VARCHAR(10)  NOT NULL DEFAULT '',
+    code_for_speech     VARCHAR(10)  NOT NULL DEFAULT '',
+    code_for_translator VARCHAR(10)  NOT NULL DEFAULT '',
     hidden            BOOLEAN      NOT NULL DEFAULT false,
-    specialLetters    VARCHAR(255) NOT NULL DEFAULT ''
+    special_letters    VARCHAR(255) NOT NULL DEFAULT ''
 );
 
 CREATE INDEX idx_languages_shortcut ON languages(shortcut);

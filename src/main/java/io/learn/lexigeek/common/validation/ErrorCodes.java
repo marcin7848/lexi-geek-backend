@@ -5,6 +5,9 @@ public enum ErrorCodes {
     EMAIL_ALREADY_EXISTS,
     USER_NOT_FOUND,
 
+    //LANGUAGE
+    LANGUAGE_NOT_FOUND,
+
     //GENERAL
     EXTERNAL_SERVICE_ERROR,
     GENERAL_ERROR,
@@ -13,8 +16,4 @@ public enum ErrorCodes {
 
     //SECURITY
     INVALID_CREDENTIALS,
-
-
-
-
 }
