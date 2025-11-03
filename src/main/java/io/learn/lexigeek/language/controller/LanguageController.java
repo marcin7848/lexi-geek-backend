@@ -30,7 +30,7 @@ class LanguageController {
 
     private static final class Routes {
         private static final String LANGUAGES = "/languages";
-        private static final String LANGUAGE_BY_UUID = "/languages/{uuid}";
+        private static final String LANGUAGE_BY_UUID = LANGUAGES + "/{uuid}";
     }
 
     private final LanguageFacade languageFacade;

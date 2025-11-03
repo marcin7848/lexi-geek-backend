@@ -1,5 +1,6 @@
 package io.learn.lexigeek.language.domain;
 
+import io.learn.lexigeek.common.entity.AbstractEntity;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -9,6 +10,7 @@ import jakarta.persistence.criteria.Root;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -26,13 +28,14 @@ class LanguageSpecification implements Specification<Language> {
     private final transient Long accountId;
 
     @Override
-    public Predicate toPredicate(final Root<Language> root,
+    public Predicate toPredicate(@Nullable final Root<Language> root,
                                  @NonNull final CriteriaQuery<?> query,
                                  @NonNull final CriteriaBuilder criteriaBuilder) {
         final List<Predicate> predicates = new ArrayList<>();
 
+        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.account).get(AbstractEntity.Fields.id), accountId);
+
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(AbstractUuidEntity.Fields.uuid), form.uuid());
-        //TODO: add accountId check
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.name), form.name());
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.shortcut), form.shortcut());
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.codeForSpeech), form.codeForSpeech());
