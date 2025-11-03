@@ -1,10 +1,10 @@
 package io.learn.lexigeek.security.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
+import io.learn.lexigeek.account.dto.AccountForm;
 import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.security.AuthFacade;
 import io.learn.lexigeek.security.dto.LoginForm;
-import io.learn.lexigeek.account.dto.AccountForm;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

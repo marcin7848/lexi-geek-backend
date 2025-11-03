@@ -2,13 +2,17 @@ package io.learn.lexigeek.account.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.account.dto.AccountForm;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
+import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
-import io.learn.lexigeek.account.dto.AccountForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -21,6 +25,13 @@ public class AccountService implements AccountFacade {
     }
 
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public AccountDto getLoggedAccount() {
+        final Account account = getAccount();
+        return AccountMapper.entityToDto(account);
+    }
 
     @Override
     public AccountDto getAccountByEmail(final String email) {
@@ -35,8 +46,19 @@ public class AccountService implements AccountFacade {
         });
 
         final Account account = AccountMapper.formToEntity(form);
+        account.setPassword(passwordEncoder.encode(form.password()));
         accountRepository.save(account);
         log.info(LogMessages.ACCOUNT_CREATED, account.getUuid());
+    }
+
+    private Account getAccount() {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AuthorizationException(ErrorCodes.UNAUTHORIZED);
+        }
+
+        final String email = authentication.getName();
+        return getAccount(email);
     }
 
     private Account getAccount(final String email) {
