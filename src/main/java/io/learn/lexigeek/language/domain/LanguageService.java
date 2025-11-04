@@ -12,11 +12,13 @@ import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.language.dto.LanguageDto;
 import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
+import io.learn.lexigeek.language.dto.ShortcutDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -63,5 +65,10 @@ public class LanguageService implements LanguageFacade {
         final Language language = languageRepository.findByUuidAndAccountId(uuid, account.id())
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, uuid));
         languageRepository.delete(language);
+    }
+
+    @Override
+    public List<ShortcutDto> getPopularShortcuts(final String shortcutText) {
+        return List.of();
     }
 }
