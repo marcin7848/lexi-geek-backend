@@ -16,7 +16,7 @@ class CategoryMapper {
     void updateEntityFromForm(final Category category, final CategoryForm form) {
         category.setMode(form.mode());
         category.setMethod(form.method());
-        category.setOrder(form.order());
+        category.setPosition(form.position());
     }
 
     CategoryDto entityToDto(final Category category) {
@@ -25,7 +25,7 @@ class CategoryMapper {
                 category.getParent() != null ? category.getParent().getUuid() : null,
                 category.getMode(),
                 category.getMethod(),
-                category.getOrder());
+                category.getPosition());
     }
 }
 

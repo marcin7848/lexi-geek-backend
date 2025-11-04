@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record CategoryForm(@NotNull CategoryMode mode,
                            @NotNull CategoryMethod method,
-                           @NotNull Integer order,
+                           @NotNull Integer position,
                            UUID parentUuid) {
 }
 

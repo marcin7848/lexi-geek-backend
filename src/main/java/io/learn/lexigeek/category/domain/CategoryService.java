@@ -31,7 +31,7 @@ public class CategoryService implements CategoryFacade {
     public PageDto<CategoryDto> getCategories(final UUID languageUuid, final CategoryFilterForm form, final PageableRequest pageableRequest) {
         languageFacade.verifyLanguageOwnership(languageUuid);
 
-        pageableRequest.addDefaultSorts(new SortOrder(Category.Fields.order, Sort.Direction.ASC));
+        pageableRequest.addDefaultSorts(new SortOrder(Category.Fields.position, Sort.Direction.ASC));
 
         final CategorySpecification specification = new CategorySpecification(form, languageUuid);
 

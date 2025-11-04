@@ -9,6 +9,6 @@ public record CategoryDto(UUID uuid,
                           UUID parentUuid,
                           CategoryMode mode,
                           CategoryMethod method,
-                          Integer order) {
+                          Integer position) {
 }
 

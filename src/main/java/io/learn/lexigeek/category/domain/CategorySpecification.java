@@ -37,7 +37,7 @@ class CategorySpecification implements Specification<Category> {
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Category.Fields.parent).get(AbstractUuidEntity.Fields.uuid), form.parentUuid());
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Category.Fields.mode), form.mode());
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Category.Fields.method), form.method());
-        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Category.Fields.order), form.order());
+        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Category.Fields.position), form.position());
 
         return buildAndPredicates(criteriaBuilder, predicates);
     }

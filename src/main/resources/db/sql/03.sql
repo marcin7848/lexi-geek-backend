@@ -9,7 +9,7 @@ CREATE TABLE "categories"
             CONSTRAINT fk_categories_category_parent_id REFERENCES categories (id) ON DELETE CASCADE,
     mode        VARCHAR(10) NOT NULL CHECK (mode IN ('DICTIONARY', 'EXERCISE')),
     method      VARCHAR(18) NOT NULL CHECK (method IN ('QUESTION_TO_ANSWER', 'ANSWER_TO_QUESTION', 'BOTH')),
-    order       INTEGER     NOT NULL,
+    position    INTEGER     NOT NULL,
     language_id BIGINT      NOT NULL
         CONSTRAINT fk_categories_language_id REFERENCES languages (id) ON DELETE CASCADE
 );

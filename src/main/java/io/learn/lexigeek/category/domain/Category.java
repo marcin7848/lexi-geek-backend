@@ -35,8 +35,8 @@ class Category extends AbstractUuidEntity {
     @Column(name = "method", nullable = false, length = 18)
     private CategoryMethod method;
 
-    @Column(name = "order", nullable = false)
-    private Integer order;
+    @Column(name = "position", nullable = false)
+    private Integer position;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language_id", nullable = false)
