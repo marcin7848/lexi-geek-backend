@@ -15,6 +15,7 @@ import io.learn.lexigeek.language.dto.LanguageForm;
 import io.learn.lexigeek.language.dto.ShortcutDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +70,6 @@ public class LanguageService implements LanguageFacade {
 
     @Override
     public List<ShortcutDto> getPopularShortcuts(final String shortcut) {
-        return languageRepository.findPopularShortcuts(shortcut);
+        return languageRepository.findPopularShortcuts(shortcut, PageRequest.of(0, 10));
     }
 }
