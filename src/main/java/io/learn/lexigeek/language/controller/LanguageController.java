@@ -6,6 +6,7 @@ import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.language.dto.LanguageDto;
 import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
+import io.learn.lexigeek.language.dto.ShortcutDto;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ class LanguageController {
     private static final class Routes {
         private static final String LANGUAGES = "/languages";
         private static final String LANGUAGE_BY_UUID = LANGUAGES + "/{uuid}";
+        private static final String SHORTCUTS = LANGUAGES + "/shortcuts";
     }
 
     private final LanguageFacade languageFacade;
@@ -57,5 +59,10 @@ class LanguageController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteLanguage(@PathVariable final UUID uuid) {
         languageFacade.deleteLanguage(uuid);
+    }
+
+    @GetMapping(Routes.SHORTCUTS)
+    List<ShortcutDto> getPopularShortcuts(final String shortcut) {
+        return languageFacade.getPopularShortcuts(shortcut);
     }
 }
