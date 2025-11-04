@@ -68,7 +68,7 @@ public class LanguageService implements LanguageFacade {
     }
 
     @Override
-    public List<ShortcutDto> getPopularShortcuts(final String shortcutText) {
-        return languageRepository.findPopularShortcuts(shortcutText);
+    public List<ShortcutDto> getPopularShortcuts(final String shortcut) {
+        return languageRepository.findPopularShortcuts(shortcut);
     }
 }

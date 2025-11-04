@@ -62,7 +62,7 @@ class LanguageController {
     }
 
     @GetMapping(Routes.SHORTCUTS)
-    List<ShortcutDto> getPopularShortcuts(final String shortcutText) {
-        return languageFacade.getPopularShortcuts(shortcutText);
+    List<ShortcutDto> getPopularShortcuts(final String shortcut) {
+        return languageFacade.getPopularShortcuts(shortcut);
     }
 }
