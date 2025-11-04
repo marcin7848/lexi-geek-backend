@@ -20,5 +20,5 @@ interface LanguageRepository extends UUIDAwareJpaRepository<Language, Long>, Jpa
             "WHERE (:shortcut IS NULL OR :shortcut = '' OR LOWER(l.shortcut) LIKE LOWER(CONCAT('%', :shortcut, '%'))) " +
             "GROUP BY l.name, l.shortcut " +
             "ORDER BY COUNT(l.shortcut) DESC")
-    List<ShortcutDto> findPopularShortcuts(@Param("shortcutText") final String shortcut);
+    List<ShortcutDto> findPopularShortcuts(@Param("shortcut") final String shortcut);
 }
