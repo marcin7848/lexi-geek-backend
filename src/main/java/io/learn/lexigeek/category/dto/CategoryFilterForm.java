@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record CategoryFilterForm(UUID uuid,
                                  UUID parentUuid,
+                                 String name,
                                  CategoryMode mode,
                                  CategoryMethod method,
                                  Integer position) {

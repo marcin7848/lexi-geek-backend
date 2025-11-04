@@ -27,6 +27,9 @@ class Category extends AbstractUuidEntity {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
+    @Column(name = "name", nullable = false, length = 255)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "mode", nullable = false, length = 10)
     private CategoryMode mode;
