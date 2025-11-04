@@ -10,6 +10,7 @@ import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.pageable.PageableUtils;
 import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
+import io.learn.lexigeek.language.LanguageFacade;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -24,9 +25,12 @@ public class CategoryService implements CategoryFacade {
 
     private final CategoryRepository categoryRepository;
     private final LanguageRepository languageRepository;
+    private final LanguageFacade languageFacade;
 
     @Override
     public PageDto<CategoryDto> getCategories(final UUID languageUuid, final CategoryFilterForm form, final PageableRequest pageableRequest) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
         pageableRequest.addDefaultSorts(new SortOrder(Category.Fields.order, Sort.Direction.ASC));
 
         final CategorySpecification specification = new CategorySpecification(form, languageUuid);
@@ -36,7 +40,10 @@ public class CategoryService implements CategoryFacade {
     }
 
     @Override
+    @Transactional
     public void createCategory(final UUID languageUuid, final CategoryForm form) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
         final Language language = languageRepository.findByUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
 
@@ -49,7 +56,10 @@ public class CategoryService implements CategoryFacade {
     }
 
     @Override
+    @Transactional
     public void editCategory(final UUID languageUuid, final UUID uuid, final CategoryForm form) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
         final Category category = categoryRepository.findByUuidAndLanguageUuid(uuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, uuid));
 
@@ -73,6 +83,8 @@ public class CategoryService implements CategoryFacade {
     @Override
     @Transactional
     public void deleteCategory(final UUID languageUuid, final UUID uuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
         final Category category = categoryRepository.findByUuidAndLanguageUuid(uuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, uuid));
         categoryRepository.delete(category);

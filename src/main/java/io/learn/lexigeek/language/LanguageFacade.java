@@ -21,4 +21,6 @@ public interface LanguageFacade {
     void deleteLanguage(final UUID uuid);
 
     List<ShortcutDto> getPopularShortcuts(final String shortcutText);
+
+    void verifyLanguageOwnership(final UUID languageUuid);
 }

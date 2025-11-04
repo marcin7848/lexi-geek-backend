@@ -74,4 +74,11 @@ public class LanguageService implements LanguageFacade {
     public List<ShortcutDto> getPopularShortcuts(final String shortcut) {
         return languageRepository.findPopularShortcuts(shortcut, PageRequest.of(0, 10));
     }
+
+    @Override
+    public void verifyLanguageOwnership(final UUID languageUuid) {
+        final AccountDto account = accountFacade.getLoggedAccount();
+        languageRepository.findByUuidAndAccountId(languageUuid, account.id())
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
+    }
 }
