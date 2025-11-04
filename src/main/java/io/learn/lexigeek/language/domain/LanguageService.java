@@ -13,6 +13,7 @@ import io.learn.lexigeek.language.dto.LanguageDto;
 import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
 import io.learn.lexigeek.language.dto.ShortcutDto;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -61,6 +62,7 @@ public class LanguageService implements LanguageFacade {
     }
 
     @Override
+    @Transactional
     public void deleteLanguage(final UUID uuid) {
         final AccountDto account = accountFacade.getLoggedAccount();
         final Language language = languageRepository.findByUuidAndAccountId(uuid, account.id())
