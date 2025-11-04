@@ -17,7 +17,6 @@ class CategoryMapper {
         category.setName(form.name());
         category.setMode(form.mode());
         category.setMethod(form.method());
-        category.setPosition(form.position());
     }
 
     CategoryDto entityToDto(final Category category) {

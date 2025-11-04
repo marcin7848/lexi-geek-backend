@@ -50,6 +50,9 @@ public class CategoryService implements CategoryFacade {
         final Category category = CategoryMapper.formToEntity(form);
         category.setLanguage(language);
 
+        final Integer maxPosition = categoryRepository.findMaxPositionByLanguageUuid(languageUuid);
+        category.setPosition(maxPosition + 1);
+
         setParentIfProvided(languageUuid, form, category);
 
         categoryRepository.save(category);
