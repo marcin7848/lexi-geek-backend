@@ -43,11 +43,7 @@ public class CategoryService implements CategoryFacade {
         final Category category = CategoryMapper.formToEntity(form);
         category.setLanguage(language);
 
-        if (form.parentUuid() != null) {
-            final Category parent = categoryRepository.findByUuidAndLanguageUuid(form.parentUuid(), languageUuid)
-                    .orElseThrow(() -> new NotFoundException(ErrorCodes.PARENT_CATEGORY_NOT_FOUND, form.parentUuid()));
-            category.setParent(parent);
-        }
+        setParentIfProvided(languageUuid, form, category);
 
         categoryRepository.save(category);
     }
@@ -59,6 +55,12 @@ public class CategoryService implements CategoryFacade {
 
         CategoryMapper.updateEntityFromForm(category, form);
 
+        setParentIfProvided(languageUuid, form, category);
+
+        categoryRepository.save(category);
+    }
+
+    private void setParentIfProvided(final UUID languageUuid, final CategoryForm form, final Category category) {
         if (form.parentUuid() != null) {
             final Category parent = categoryRepository.findByUuidAndLanguageUuid(form.parentUuid(), languageUuid)
                     .orElseThrow(() -> new NotFoundException(ErrorCodes.PARENT_CATEGORY_NOT_FOUND, form.parentUuid()));
@@ -66,8 +68,6 @@ public class CategoryService implements CategoryFacade {
         } else {
             category.setParent(null);
         }
-
-        categoryRepository.save(category);
     }
 
     @Override
