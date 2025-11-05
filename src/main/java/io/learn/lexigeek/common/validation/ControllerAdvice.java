@@ -3,13 +3,16 @@ package io.learn.lexigeek.common.validation;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.common.exception.NotFoundException;
+import io.learn.lexigeek.common.exception.ValidationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 import java.util.List;
 
@@ -27,6 +30,13 @@ class ControllerAdvice {
     @ExceptionHandler(AlreadyExistsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto alreadyExistsException(final AlreadyExistsException e) {
+        log.warn("{} - {}", e.getMessage(), e.getArgs());
+        return new ErrorDto(e.getError(), e.getArgs());
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ErrorDto validationException(final ValidationException e) {
         log.warn("{} - {}", e.getMessage(), e.getArgs());
         return new ErrorDto(e.getError(), e.getArgs());
     }
@@ -49,6 +59,20 @@ class ControllerAdvice {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorDto methodArgumentNotValidException(final MethodArgumentNotValidException e) {
+        log.warn(e.getMessage());
+        return ErrorDto.from(ErrorCodes.VALIDATION_ERROR, List.of(), e);
+    }
+
+    @ExceptionHandler(InvalidFormatException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ErrorDto invalidFormatException(final InvalidFormatException e) {
+        log.warn(e.getMessage());
+        return ErrorDto.from(ErrorCodes.VALIDATION_ERROR, List.of(), e);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ErrorDto httpMessageNotReadableException(final HttpMessageNotReadableException e) {
         log.warn(e.getMessage());
         return ErrorDto.from(ErrorCodes.VALIDATION_ERROR, List.of(), e);
     }
