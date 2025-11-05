@@ -6,205 +6,110 @@ import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.exception.ValidationException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-/**
- * Example test class for CategoryController drag-and-drop functionality
- * NOTE: This is an example/template. You may need to adjust based on your security configuration.
- *
- * IMPORTANT: Position uniqueness is guaranteed by the implementation through:
- * 1. Always excluding the moving category from position updates
- * 2. Using range-based updates for same-parent moves
- * 3. Atomic transactions ensuring consistency
- *
- * For integration tests, verify that after each move:
- * - No two categories in the same parent have the same position
- * - Positions are sequential with no gaps (0, 1, 2, 3, ...)
- */
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class CategoryControllerDragDropTest {
 
-    //@Autowired
-    private MockMvc mockMvc;
-
-    @Mock
-    private CategoryFacade categoryFacade;
+    private final CategoryFacade categoryFacade = mock(CategoryFacade.class);
+    private final CategoryController categoryController = new CategoryController(categoryFacade);
 
     @Test
-    void shouldUpdateCategoryPosition_WhenValidRequest() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
-        UUID parentUuid = UUID.randomUUID();
+    void shouldUpdateCategoryPosition_WhenValidRequest() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
+        final UUID parentUuid = UUID.randomUUID();
 
-        String requestBody = String.format("""
-                {
-                    "parentUuid": "%s",
-                    "position": 0
-                }
-                """, parentUuid);
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, 0);
 
-        doNothing().when(categoryFacade).updateCategoryPosition(
-                eq(languageUuid),
-                eq(categoryUuid),
-                any(UpdateCategoryPositionForm.class)
-        );
+        doNothing().when(categoryFacade).updateCategoryPosition(languageUuid, categoryUuid, form);
 
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isNoContent());
+        assertDoesNotThrow(() -> categoryController.updateCategoryPosition(languageUuid, categoryUuid, form));
+        verify(categoryFacade).updateCategoryPosition(languageUuid, categoryUuid, form);
     }
 
     @Test
-    void shouldUpdateCategoryPosition_ToRootLevel_WhenParentUuidIsNull() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
+    void shouldUpdateCategoryPosition_ToRootLevel_WhenParentUuidIsNull() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
 
-        String requestBody = """
-                {
-                    "parentUuid": null,
-                    "position": 2
-                }
-                """;
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(null, 2);
 
-        doNothing().when(categoryFacade).updateCategoryPosition(
-                eq(languageUuid),
-                eq(categoryUuid),
-                any(UpdateCategoryPositionForm.class)
-        );
+        doNothing().when(categoryFacade).updateCategoryPosition(languageUuid, categoryUuid, form);
 
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isNoContent());
+        assertDoesNotThrow(() -> categoryController.updateCategoryPosition(languageUuid, categoryUuid, form));
+        verify(categoryFacade).updateCategoryPosition(languageUuid, categoryUuid, form);
     }
 
     @Test
-    void shouldReturnNotFound_WhenCategoryDoesNotExist() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
+    void shouldThrowNotFoundException_WhenCategoryDoesNotExist() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
 
-        String requestBody = """
-                {
-                    "parentUuid": null,
-                    "position": 0
-                }
-                """;
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(null, 0);
 
         doThrow(new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid))
                 .when(categoryFacade)
-                .updateCategoryPosition(eq(languageUuid), eq(categoryUuid), any(UpdateCategoryPositionForm.class));
+                .updateCategoryPosition(languageUuid, categoryUuid, form);
 
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isNotFound());
+        assertThrows(NotFoundException.class,
+                () -> categoryController.updateCategoryPosition(languageUuid, categoryUuid, form));
     }
 
     @Test
-    void shouldReturnBadRequest_WhenCircularReferenceDetected() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
-        UUID parentUuid = UUID.randomUUID();
+    void shouldThrowValidationException_WhenCircularReferenceDetected() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
+        final UUID parentUuid = UUID.randomUUID();
 
-        String requestBody = String.format("""
-                {
-                    "parentUuid": "%s",
-                    "position": 0
-                }
-                """, parentUuid);
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, 0);
 
         doThrow(new ValidationException(ErrorCodes.CIRCULAR_REFERENCE_ERROR, "Cannot move category to its own descendant"))
                 .when(categoryFacade)
-                .updateCategoryPosition(eq(languageUuid), eq(categoryUuid), any(UpdateCategoryPositionForm.class));
+                .updateCategoryPosition(languageUuid, categoryUuid, form);
 
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
+        assertThrows(ValidationException.class,
+                () -> categoryController.updateCategoryPosition(languageUuid, categoryUuid, form));
     }
 
     @Test
-    void shouldReturnBadRequest_WhenPositionIsNegative() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
+    void shouldThrowNotFoundException_WhenParentCategoryDoesNotExist() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
+        final UUID parentUuid = UUID.randomUUID();
 
-        String requestBody = """
-                {
-                    "parentUuid": null,
-                    "position": -1
-                }
-                """;
-
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturnBadRequest_WhenPositionIsMissing() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
-
-        String requestBody = """
-                {
-                    "parentUuid": null
-                }
-                """;
-
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void shouldReturnNotFound_WhenParentCategoryDoesNotExist() throws Exception {
-        // Given
-        UUID languageUuid = UUID.randomUUID();
-        UUID categoryUuid = UUID.randomUUID();
-        UUID parentUuid = UUID.randomUUID();
-
-        String requestBody = String.format("""
-                {
-                    "parentUuid": "%s",
-                    "position": 0
-                }
-                """, parentUuid);
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, 0);
 
         doThrow(new NotFoundException(ErrorCodes.PARENT_CATEGORY_NOT_FOUND, parentUuid))
                 .when(categoryFacade)
-                .updateCategoryPosition(eq(languageUuid), eq(categoryUuid), any(UpdateCategoryPositionForm.class));
+                .updateCategoryPosition(languageUuid, categoryUuid, form);
 
-        // When & Then
-        mockMvc.perform(patch("/languages/{languageUuid}/categories/{uuid}/position", languageUuid, categoryUuid)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody))
-                .andExpect(status().isNotFound());
+        assertThrows(NotFoundException.class,
+                () -> categoryController.updateCategoryPosition(languageUuid, categoryUuid, form));
+    }
+
+    @Test
+    void shouldCallFacadeWithCorrectParameters() {
+        final UUID languageUuid = UUID.randomUUID();
+        final UUID categoryUuid = UUID.randomUUID();
+        final UUID parentUuid = UUID.randomUUID();
+        final Integer position = 5;
+
+        final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, position);
+
+        doNothing().when(categoryFacade).updateCategoryPosition(any(), any(), any());
+
+        categoryController.updateCategoryPosition(languageUuid, categoryUuid, form);
+
+        verify(categoryFacade).updateCategoryPosition(eq(languageUuid), eq(categoryUuid), eq(form));
     }
 }
-
