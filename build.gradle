@@ -6,6 +6,7 @@ buildscript {
         jUnitVersion = "6.0.0"
         archUnitVersion = "1.4.1"
         jsonwebtokenVersion = "0.12.6"
+        springWebVersion = "7.0.0-RC3"
     }
 }
 

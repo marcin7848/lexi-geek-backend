@@ -3,6 +3,7 @@ package io.learn.lexigeek.category;
 import io.learn.lexigeek.category.dto.CategoryDto;
 import io.learn.lexigeek.category.dto.CategoryFilterForm;
 import io.learn.lexigeek.category.dto.CategoryForm;
+import io.learn.lexigeek.category.dto.UpdateCategoryPositionForm;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 
@@ -17,5 +18,7 @@ public interface CategoryFacade {
     void editCategory(final UUID languageUuid, final UUID uuid, final CategoryForm form);
 
     void deleteCategory(final UUID languageUuid, final UUID uuid);
+
+    void updateCategoryPosition(final UUID languageUuid, final UUID uuid, final UpdateCategoryPositionForm form);
 }
 
