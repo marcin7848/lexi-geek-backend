@@ -73,7 +73,7 @@ class CategoryControllerDragDropTest {
 
         final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, 0);
 
-        doThrow(new ValidationException(ErrorCodes.CIRCULAR_REFERENCE_ERROR, "Cannot move category to its own descendant"))
+        doThrow(new ValidationException(ErrorCodes.CIRCULAR_REFERENCE_ERROR))
                 .when(categoryFacade)
                 .updateCategoryPosition(languageUuid, categoryUuid, form);
 
