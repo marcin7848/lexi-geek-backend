@@ -73,4 +73,3 @@ class CategoryController {
         categoryFacade.updateCategoryPosition(languageUuid, uuid, form);
     }
 }
-

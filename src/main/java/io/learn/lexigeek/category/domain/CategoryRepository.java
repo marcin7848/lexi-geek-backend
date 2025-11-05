@@ -55,4 +55,3 @@ interface CategoryRepository extends UUIDAwareJpaRepository<Category, Long>, Jpa
                                     @Param("toPosition") Integer toPosition,
                                     @Param("excludeUuid") UUID excludeUuid);
 }
-

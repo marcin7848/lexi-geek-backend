@@ -21,4 +21,3 @@ public interface CategoryFacade {
 
     void updateCategoryPosition(final UUID languageUuid, final UUID uuid, final UpdateCategoryPositionForm form);
 }
-
