@@ -135,7 +135,7 @@ public class CategoryService implements CategoryFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.PARENT_CATEGORY_NOT_FOUND, parentUuid));
 
         if (wouldCreateCircularReference(categoryUuid, parentUuid)) {
-            throw new ValidationException(ErrorCodes.CIRCULAR_REFERENCE_ERROR);
+            throw new ValidationException(ErrorCodes.CATEGORY_CIRCULAR_REFERENCE_ERROR);
         }
 
         return parent;

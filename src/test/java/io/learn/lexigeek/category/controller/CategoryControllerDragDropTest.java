@@ -73,7 +73,7 @@ class CategoryControllerDragDropTest {
 
         final UpdateCategoryPositionForm form = new UpdateCategoryPositionForm(parentUuid, 0);
 
-        doThrow(new ValidationException(ErrorCodes.CIRCULAR_REFERENCE_ERROR))
+        doThrow(new ValidationException(ErrorCodes.CATEGORY_CIRCULAR_REFERENCE_ERROR))
                 .when(categoryFacade)
                 .updateCategoryPosition(languageUuid, categoryUuid, form);
 

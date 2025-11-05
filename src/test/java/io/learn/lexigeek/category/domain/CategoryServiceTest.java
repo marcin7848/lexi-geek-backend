@@ -601,7 +601,7 @@ class CategoryServiceTest {
             // When & Then
             assertThatThrownBy(() -> categoryService.updateCategoryPosition(languageUuid, categoryUuid, form))
                     .isInstanceOf(ValidationException.class)
-                    .hasFieldOrPropertyWithValue("error", ErrorCodes.CIRCULAR_REFERENCE_ERROR);
+                    .hasFieldOrPropertyWithValue("error", ErrorCodes.CATEGORY_CIRCULAR_REFERENCE_ERROR);
 
             verify(categoryRepository, never()).save(any());
         }
@@ -627,7 +627,7 @@ class CategoryServiceTest {
             ValidationException exception = assertThrows(ValidationException.class,
                     () -> categoryService.updateCategoryPosition(languageUuid, categoryUuid, form));
 
-            assertThat(exception.getError()).isEqualTo(ErrorCodes.CIRCULAR_REFERENCE_ERROR);
+            assertThat(exception.getError()).isEqualTo(ErrorCodes.CATEGORY_CIRCULAR_REFERENCE_ERROR);
 
             verify(categoryRepository, never()).save(any());
         }
