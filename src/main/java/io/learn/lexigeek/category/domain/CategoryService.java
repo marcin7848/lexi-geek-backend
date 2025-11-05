@@ -115,7 +115,6 @@ public class CategoryService implements CategoryFacade {
             return;
         }
 
-
         if (newPosition < oldPosition) {
             categoryRepository.incrementPositionsBetween(languageUuid, newPosition, oldPosition, uuid);
         } else {
