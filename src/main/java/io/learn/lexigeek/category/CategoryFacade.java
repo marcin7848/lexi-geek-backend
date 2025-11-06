@@ -20,4 +20,6 @@ public interface CategoryFacade {
     void deleteCategory(final UUID languageUuid, final UUID uuid);
 
     void updateCategoryPosition(final UUID languageUuid, final UUID uuid, final UpdateCategoryPositionForm form);
+
+    void verifyCategoryAccess(final UUID languageUuid, final UUID categoryUuid);
 }

@@ -126,6 +126,14 @@ public class CategoryService implements CategoryFacade {
         categoryRepository.save(category);
     }
 
+    @Override
+    public void verifyCategoryAccess(final UUID languageUuid, final UUID categoryUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
+    }
+
     private Category validateAndGetParent(final UUID languageUuid, final UUID categoryUuid, final UUID parentUuid) {
         if (parentUuid == null) {
             return null;
