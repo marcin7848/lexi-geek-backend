@@ -1,6 +1,9 @@
 package io.learn.lexigeek.word.domain;
 
 import io.learn.lexigeek.category.CategoryFacade;
+import io.learn.lexigeek.category.domain.CategoryMode;
+import io.learn.lexigeek.category.dto.CategoryDto;
+import io.learn.lexigeek.category.dto.CategoryFilterForm;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
@@ -20,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import static java.util.stream.Collectors.toSet;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -61,6 +66,14 @@ class WordService implements WordFacade {
 
         final Word word = WordMapper.formToEntity(form);
         word.addCategory(category);
+
+        final Set<UUID> categories = categoryFacade.getCategories(
+                        languageUuid,
+                        new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
+                        PageableRequest.builder().singlePage(true).build())
+                .getItems().stream()
+                .map(CategoryDto::uuid)
+                .collect(toSet());
 
         //TODO: zanim doda nowe slowo sprawdź czy jakiś wordPart w nowym słowie jest answer i jest dla category DICTIONARY
         // który pokrywa się z innym słowiem (wordPart answer true, DISCOTINARY) -> jesli tak, połącz wordParts, dodaj na koniec i zrób słowo accepted na false
