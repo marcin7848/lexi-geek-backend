@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -180,13 +181,8 @@ class WordService implements WordFacade {
         return categories;
     }
 
-    /**
-     * Finds a word from the existing words list that has matching WordParts with the new word.
-     * A match occurs if there's at least one WordPart with the same answer value (true or false)
-     * and the same word content.
-     */
     private Word findWordWithMatchingParts(final java.util.List<Word> existingWords, final Word newWord) {
-        for (Word existingWord : existingWords) {
+        for (final Word existingWord : existingWords) {
             if (hasMatchingWordParts(existingWord, newWord)) {
                 return existingWord;
             }
@@ -194,15 +190,9 @@ class WordService implements WordFacade {
         return null;
     }
 
-    /**
-     * Checks if two words have matching WordParts.
-     * Returns true if there's at least one WordPart in both words with:
-     * - Same answer value (both false or both true)
-     * - Same word content
-     */
     private boolean hasMatchingWordParts(final Word existingWord, final Word newWord) {
-        for (WordPart existingPart : existingWord.getWordParts()) {
-            for (WordPart newPart : newWord.getWordParts()) {
+        for (final WordPart existingPart : existingWord.getWordParts()) {
+            for (final WordPart newPart : newWord.getWordParts()) {
                 if (existingPart.getAnswer().equals(newPart.getAnswer()) &&
                     areWordPartsEqual(existingPart, newPart)) {
                     return true;
@@ -212,33 +202,22 @@ class WordService implements WordFacade {
         return false;
     }
 
-    /**
-     * Checks if two WordParts are equal based on their word and answer fields only.
-     */
     private boolean areWordPartsEqual(final WordPart part1, final WordPart part2) {
-        return java.util.Objects.equals(part1.getWord(), part2.getWord()) &&
+        return Objects.equals(part1.getWord(), part2.getWord()) &&
                part1.getAnswer().equals(part2.getAnswer());
     }
 
-    /**
-     * Merges WordParts from the new word into the existing word.
-     * Only adds WordParts that don't already exist in the existing word.
-     * Adjusts positions to append new parts at the end.
-     */
     private void mergeWordParts(final Word existingWord, final Word newWord) {
-        // Calculate the next position for new word parts
         int nextPosition = existingWord.getWordParts().stream()
                 .mapToInt(WordPart::getPosition)
                 .max()
                 .orElse(0) + 1;
 
-        for (WordPart newPart : newWord.getWordParts()) {
-            // Check if this WordPart already exists in the existing word
+        for (final WordPart newPart : newWord.getWordParts()) {
             boolean exists = existingWord.getWordParts().stream()
                     .anyMatch(existingPart -> areWordPartsEqual(existingPart, newPart));
 
             if (!exists) {
-                // Create a new WordPart with updated position
                 final WordPart wordPart = new WordPart();
                 wordPart.setAnswer(newPart.getAnswer());
                 wordPart.setBasicWord(newPart.getBasicWord());
