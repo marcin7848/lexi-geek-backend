@@ -65,7 +65,6 @@ class WordService implements WordFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
 
         final Word word = WordMapper.formToEntity(form);
-        word.addCategory(category);
 
         if(category.getMode() == CategoryMode.DICTIONARY) {
             final Set<UUID> categories = categoryFacade.getCategories(
@@ -76,12 +75,31 @@ class WordService implements WordFacade {
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
-            //TODO: zanim doda nowe slowo sprawdź czy jakiś wordPart w nowym słowie jest answer i jest dla category DICTIONARY
-            // który pokrywa się z innym słowiem (wordPart answer true, DISCOTINARY) -> jesli tak, połącz wordParts, dodaj na koniec i zrób słowo accepted na false
+            // Find existing words in DICTIONARY categories
+            final java.util.List<Word> existingWords = wordRepository.findByCategoryUuidsWithDetails(categories);
 
+            // Check if any existing word has matching WordParts
+            final Word matchingWord = findWordWithMatchingParts(existingWords, word);
 
+            if (matchingWord != null) {
+                // Merge WordParts into the existing word
+                mergeWordParts(matchingWord, word);
+
+                // Add the category if not already present
+                if (!matchingWord.getCategories().contains(category)) {
+                    matchingWord.addCategory(category);
+                }
+
+                // Set accepted to false as per requirements
+                matchingWord.setAccepted(false);
+
+                final Word savedWord = wordRepository.save(matchingWord);
+                return WordMapper.entityToDto(savedWord);
+            }
         }
 
+        // No matching word found, create new word
+        word.addCategory(category);
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
     }
@@ -165,6 +183,79 @@ class WordService implements WordFacade {
         // For now, we'll skip finding by names as it would require additional repository methods
         // This can be enhanced later if needed
         return categories;
+    }
+
+    /**
+     * Finds a word from the existing words list that has matching WordParts with the new word.
+     * A match occurs if there's at least one WordPart with the same answer value (true or false)
+     * and the same word content.
+     */
+    private Word findWordWithMatchingParts(final java.util.List<Word> existingWords, final Word newWord) {
+        for (Word existingWord : existingWords) {
+            if (hasMatchingWordParts(existingWord, newWord)) {
+                return existingWord;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks if two words have matching WordParts.
+     * Returns true if there's at least one WordPart in both words with:
+     * - Same answer value (both false or both true)
+     * - Same word content
+     */
+    private boolean hasMatchingWordParts(final Word existingWord, final Word newWord) {
+        for (WordPart existingPart : existingWord.getWordParts()) {
+            for (WordPart newPart : newWord.getWordParts()) {
+                if (existingPart.getAnswer().equals(newPart.getAnswer()) &&
+                    areWordPartsEqual(existingPart, newPart)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if two WordParts are equal based on their word and answer fields only.
+     */
+    private boolean areWordPartsEqual(final WordPart part1, final WordPart part2) {
+        return java.util.Objects.equals(part1.getWord(), part2.getWord()) &&
+               part1.getAnswer().equals(part2.getAnswer());
+    }
+
+    /**
+     * Merges WordParts from the new word into the existing word.
+     * Only adds WordParts that don't already exist in the existing word.
+     * Adjusts positions to append new parts at the end.
+     */
+    private void mergeWordParts(final Word existingWord, final Word newWord) {
+        // Calculate the next position for new word parts
+        int nextPosition = existingWord.getWordParts().stream()
+                .mapToInt(WordPart::getPosition)
+                .max()
+                .orElse(0) + 1;
+
+        for (WordPart newPart : newWord.getWordParts()) {
+            // Check if this WordPart already exists in the existing word
+            boolean exists = existingWord.getWordParts().stream()
+                    .anyMatch(existingPart -> areWordPartsEqual(existingPart, newPart));
+
+            if (!exists) {
+                // Create a new WordPart with updated position
+                final WordPart wordPart = new WordPart();
+                wordPart.setAnswer(newPart.getAnswer());
+                wordPart.setBasicWord(newPart.getBasicWord());
+                wordPart.setPosition(nextPosition++);
+                wordPart.setToSpeech(newPart.getToSpeech());
+                wordPart.setSeparator(newPart.getSeparator());
+                wordPart.setSeparatorType(newPart.getSeparatorType());
+                wordPart.setWord(newPart.getWord());
+
+                existingWord.addWordPart(wordPart);
+            }
+        }
     }
 }
 
