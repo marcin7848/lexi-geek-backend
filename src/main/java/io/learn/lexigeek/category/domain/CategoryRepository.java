@@ -14,24 +14,38 @@ import java.util.UUID;
 interface CategoryRepository extends UUIDAwareJpaRepository<Category, Long>, JpaSpecificationExecutor<Category> {
     Optional<Category> findByUuidAndLanguageUuid(final UUID uuid, final UUID languageUuid);
 
-    @Query("SELECT COALESCE(MAX(c.position), -1) FROM Category c WHERE c.language.uuid = :languageUuid")
+    @Query("""
+            SELECT COALESCE(MAX(c.position), -1) FROM Category c WHERE c.language.uuid = :languageUuid
+            """)
     Integer findMaxPositionByLanguageUuid(@Param("languageUuid") final UUID languageUuid);
 
     @Modifying
-    @Query("UPDATE Category c SET c.position = c.position + 1 WHERE c.language.uuid = :languageUuid " +
-            "AND c.position >= :fromPosition AND c.position < :toPosition AND c.uuid != :excludeUuid")
+    @Query("""
+            UPDATE Category c SET c.position = c.position + 1 WHERE c.language.uuid = :languageUuid
+                        AND c.position >= :fromPosition AND c.position < :toPosition AND c.uuid != :excludeUuid
+            """)
     void incrementPositionsBetween(@Param("languageUuid") final UUID languageUuid,
                                    @Param("fromPosition") final Integer fromPosition,
                                    @Param("toPosition") final Integer toPosition,
                                    @Param("excludeUuid") final UUID excludeUuid);
 
     @Modifying
-    @Query("UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid " +
-            "AND c.position > :fromPosition AND c.position <= :toPosition AND c.uuid != :excludeUuid")
+    @Query("""
+            UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid
+                        AND c.position > :fromPosition AND c.position <= :toPosition AND c.uuid != :excludeUuid
+            """)
     void decrementPositionsBetween(@Param("languageUuid") final UUID languageUuid,
                                    @Param("fromPosition") final Integer fromPosition,
                                    @Param("toPosition") final Integer toPosition,
                                    @Param("excludeUuid") final UUID excludeUuid);
+
+    @Modifying
+    @Query("""
+            UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid 
+                        AND c.position > :deletedPosition
+            """)
+    void decrementPositionsAfter(@Param("languageUuid") final UUID languageUuid,
+                                 @Param("deletedPosition") final Integer deletedPosition);
 
     @Query(value = """
             WITH RECURSIVE parent_hierarchy AS (

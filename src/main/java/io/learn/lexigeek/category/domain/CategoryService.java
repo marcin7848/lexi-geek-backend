@@ -92,7 +92,11 @@ public class CategoryService implements CategoryFacade {
 
         final Category category = categoryRepository.findByUuidAndLanguageUuid(uuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, uuid));
+
+        final Integer deletedPosition = category.getPosition();
+
         categoryRepository.delete(category);
+        categoryRepository.decrementPositionsAfter(languageUuid, deletedPosition);
     }
 
     @Override
