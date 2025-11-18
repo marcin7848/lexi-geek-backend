@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -66,10 +65,10 @@ class WordService implements WordFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
 
         final Word word = WordMapper.formToEntity(form);
+        word.addCategory(category);
 
         if(category.getMode() == CategoryMode.DICTIONARY) {
-            // Get all DICTIONARY category UUIDs for the language
-            final Set<UUID> dictionaryCategoryUuids = categoryFacade.getCategories(
+            final Set<UUID> categories = categoryFacade.getCategories(
                             languageUuid,
                             new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
                             PageableRequest.builder().singlePage(true).build())
@@ -77,56 +76,12 @@ class WordService implements WordFacade {
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
-            // Extract answer texts from the new word's WordParts
-            final Set<String> newWordTexts = word.getWordParts().stream()
-                    .filter(WordPart::getAnswer)
-                    .map(WordPart::getWord)
-                    .filter(w -> w != null && !w.isEmpty())
-                    .collect(toSet());
+            //TODO: zanim doda nowe slowo sprawdź czy jakiś wordPart w nowym słowie jest answer i jest dla category DICTIONARY
+            // który pokrywa się z innym słowiem (wordPart answer true, DISCOTINARY) -> jesli tak, połącz wordParts, dodaj na koniec i zrób słowo accepted na false
 
-            if (!newWordTexts.isEmpty()) {
-                // Find existing words in DICTIONARY categories with matching answer texts
-                final List<Word> existingWordsWithMatchingAnswers = wordRepository
-                        .findWordsInCategoriesWithWordPartsWords(dictionaryCategoryUuids, newWordTexts);
 
-                if (!existingWordsWithMatchingAnswers.isEmpty()) {
-                    // Use the first matching word and merge WordParts
-                    final Word existingWord = existingWordsWithMatchingAnswers.getFirst();
-
-                    // Add the category to the existing word if not already present
-                    existingWord.addCategory(category);
-
-                    // Get existing word part identifiers to avoid duplicates
-                    final Set<String> existingWordPartKeys = existingWord.getWordParts().stream()
-                            .map(wp -> wp.getWord() + "|" + wp.getAnswer() + "|" + wp.getBasicWord())
-                            .collect(toSet());
-
-                    // Get the maximum position in existing word
-                    int maxPosition = existingWord.getWordParts().stream()
-                            .mapToInt(WordPart::getPosition)
-                            .max()
-                            .orElse(-1);
-
-                    // Add non-duplicate WordParts from the new word
-                    for (final WordPart newWordPart : word.getWordParts()) {
-                        final String key = newWordPart.getWord() + "|" + newWordPart.getAnswer() + "|" + newWordPart.getBasicWord();
-                        if (!existingWordPartKeys.contains(key)) {
-                            maxPosition++;
-                            newWordPart.setPosition(maxPosition);
-                            existingWord.addWordPart(newWordPart);
-                        }
-                    }
-
-                    existingWord.setAccepted(false);
-
-                    final Word savedWord = wordRepository.save(existingWord);
-                    return WordMapper.entityToDto(savedWord);
-                }
-            }
         }
 
-        // If no matching word found or not DICTIONARY mode, add as new word
-        word.addCategory(category);
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
     }

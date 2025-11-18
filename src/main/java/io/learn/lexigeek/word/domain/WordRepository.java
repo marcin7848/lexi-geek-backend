@@ -6,9 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -29,15 +27,5 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
             "LEFT JOIN FETCH w.categories c " +
             "WHERE w.uuid = :uuid")
     Optional<Word> findByUuidWithDetails(@Param("uuid") final UUID uuid);
-
-    @Query("""
-            SELECT DISTINCT w FROM Word w
-            JOIN FETCH w.categories c
-            JOIN FETCH w.wordParts wp
-            WHERE c.uuid IN :categoryUuids
-            AND wp.answer = true
-            AND wp.word IN :answerTexts
-            """)
-    List<Word> findWordsInCategoriesWithWordPartsWords(@Param("categoryUuids") final Set<UUID> categoryUuids,
-                                                       @Param("answerTexts") final Set<String> wordTexts);
 }
+
