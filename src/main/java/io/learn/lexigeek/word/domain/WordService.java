@@ -67,16 +67,21 @@ class WordService implements WordFacade {
         final Word word = WordMapper.formToEntity(form);
         word.addCategory(category);
 
-        final Set<UUID> categories = categoryFacade.getCategories(
-                        languageUuid,
-                        new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
-                        PageableRequest.builder().singlePage(true).build())
-                .getItems().stream()
-                .map(CategoryDto::uuid)
-                .collect(toSet());
+        if(category.getMode() == CategoryMode.DICTIONARY) {
+            final Set<UUID> categories = categoryFacade.getCategories(
+                            languageUuid,
+                            new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
+                            PageableRequest.builder().singlePage(true).build())
+                    .getItems().stream()
+                    .filter(c -> c.mode() == CategoryMode.DICTIONARY)
+                    .map(CategoryDto::uuid)
+                    .collect(toSet());
 
-        //TODO: zanim doda nowe slowo sprawdź czy jakiś wordPart w nowym słowie jest answer i jest dla category DICTIONARY
-        // który pokrywa się z innym słowiem (wordPart answer true, DISCOTINARY) -> jesli tak, połącz wordParts, dodaj na koniec i zrób słowo accepted na false
+            //TODO: zanim doda nowe slowo sprawdź czy jakiś wordPart w nowym słowie jest answer i jest dla category DICTIONARY
+            // który pokrywa się z innym słowiem (wordPart answer true, DISCOTINARY) -> jesli tak, połącz wordParts, dodaj na koniec i zrób słowo accepted na false
+
+
+        }
 
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
