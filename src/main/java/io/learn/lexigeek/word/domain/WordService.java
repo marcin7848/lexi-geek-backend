@@ -214,7 +214,7 @@ class WordService implements WordFacade {
                 .orElse(0) + 1;
 
         for (final WordPart newPart : newWord.getWordParts()) {
-            boolean exists = existingWord.getWordParts().stream()
+            final boolean exists = existingWord.getWordParts().stream()
                     .anyMatch(existingPart -> areWordPartsEqual(existingPart, newPart));
 
             if (!exists) {
