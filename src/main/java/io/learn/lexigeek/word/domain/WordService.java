@@ -68,7 +68,7 @@ class WordService implements WordFacade {
 
         final Word word = WordMapper.formToEntity(form);
 
-        if(category.getMode() == CategoryMode.DICTIONARY) {
+        if (category.getMode() == CategoryMode.DICTIONARY) {
             final Set<UUID> categories = categoryFacade.getCategories(
                             languageUuid,
                             new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
@@ -181,30 +181,23 @@ class WordService implements WordFacade {
         return categories;
     }
 
-    private Word findWordWithMatchingParts(final java.util.List<Word> existingWords, final Word newWord) {
-        for (final Word existingWord : existingWords) {
-            if (hasMatchingWordParts(existingWord, newWord)) {
-                return existingWord;
-            }
-        }
-        return null;
+    private Word findWordWithMatchingParts(final List<Word> existingWords, final Word newWord) {
+        return existingWords.stream()
+                .filter(existingWord -> hasMatchingWordParts(existingWord, newWord))
+                .findFirst()
+                .orElse(null);
     }
 
     private boolean hasMatchingWordParts(final Word existingWord, final Word newWord) {
-        for (final WordPart existingPart : existingWord.getWordParts()) {
-            for (final WordPart newPart : newWord.getWordParts()) {
-                if (existingPart.getAnswer().equals(newPart.getAnswer()) &&
-                    areWordPartsEqual(existingPart, newPart)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return existingWord.getWordParts().stream().anyMatch(existingPart ->
+                newWord.getWordParts().stream().anyMatch(
+                        newPart -> areWordPartsEqual(existingPart, newPart)
+                )
+        );
     }
 
     private boolean areWordPartsEqual(final WordPart part1, final WordPart part2) {
-        return Objects.equals(part1.getWord(), part2.getWord()) &&
-               part1.getAnswer().equals(part2.getAnswer());
+        return Objects.equals(part1.getWord(), part2.getWord()) && part1.getAnswer().equals(part2.getAnswer());
     }
 
     private void mergeWordParts(final Word existingWord, final Word newWord) {
@@ -218,18 +211,11 @@ class WordService implements WordFacade {
                     .anyMatch(existingPart -> areWordPartsEqual(existingPart, newPart));
 
             if (!exists) {
-                final WordPart wordPart = new WordPart();
-                wordPart.setAnswer(newPart.getAnswer());
-                wordPart.setBasicWord(newPart.getBasicWord());
-                wordPart.setPosition(nextPosition++);
-                wordPart.setToSpeech(newPart.getToSpeech());
-                wordPart.setSeparator(newPart.getSeparator());
-                wordPart.setSeparatorType(newPart.getSeparatorType());
-                wordPart.setWord(newPart.getWord());
+                final WordPart wordPart = new WordPart(newPart.getAnswer(), newPart.getBasicWord(), nextPosition++,
+                        newPart.getToSpeech(), newPart.getSeparator(), newPart.getSeparatorType(), newPart.getWord());
 
                 existingWord.addWordPart(wordPart);
             }
         }
     }
 }
-
