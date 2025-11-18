@@ -6,32 +6,40 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
 interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecificationExecutor<Word> {
 
-    @Query("SELECT w FROM Word w " +
-            "LEFT JOIN FETCH w.wordParts wp " +
-            "LEFT JOIN FETCH w.wordStats ws " +
-            "LEFT JOIN FETCH w.categories c " +
-            "WHERE w.uuid = :uuid " +
-            "AND EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid = :categoryUuid)")
+    @Query("""
+            SELECT w FROM Word w
+                        LEFT JOIN FETCH w.wordParts wp
+                        LEFT JOIN FETCH w.wordStats ws 
+                        LEFT JOIN FETCH w.categories c 
+                        WHERE w.uuid = :uuid 
+                        AND EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid = :categoryUuid)
+            """)
     Optional<Word> findByUuidAndCategoryUuid(@Param("uuid") final UUID uuid,
                                              @Param("categoryUuid") final UUID categoryUuid);
 
-    @Query("SELECT w FROM Word w " +
-            "LEFT JOIN FETCH w.wordParts wp " +
-            "LEFT JOIN FETCH w.wordStats ws " +
-            "LEFT JOIN FETCH w.categories c " +
-            "WHERE w.uuid = :uuid")
+    @Query("""
+            SELECT w FROM Word w
+                    LEFT JOIN FETCH w.wordParts wp
+                    LEFT JOIN FETCH w.wordStats ws
+                    LEFT JOIN FETCH w.categories c
+                    WHERE w.uuid = :uuid
+            """)
     Optional<Word> findByUuidWithDetails(@Param("uuid") final UUID uuid);
 
-    @Query("SELECT DISTINCT w FROM Word w " +
-            "LEFT JOIN FETCH w.wordParts wp " +
-            "LEFT JOIN FETCH w.categories c " +
-            "WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid IN :categoryUuids)")
-    java.util.List<Word> findByCategoryUuidsWithDetails(@Param("categoryUuids") final java.util.Set<UUID> categoryUuids);
+    @Query("""
+            SELECT DISTINCT w FROM Word w
+                       LEFT JOIN FETCH w.wordParts wp
+                       LEFT JOIN FETCH w.categories c
+                       WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid IN :categoryUuids)
+            """)
+    List<Word> findByCategoryUuidsWithDetails(@Param("categoryUuids") final Set<UUID> categoryUuids);
 }
 

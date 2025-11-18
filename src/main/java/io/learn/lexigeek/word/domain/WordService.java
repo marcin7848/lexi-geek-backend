@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -75,22 +76,17 @@ class WordService implements WordFacade {
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
-            // Find existing words in DICTIONARY categories
-            final java.util.List<Word> existingWords = wordRepository.findByCategoryUuidsWithDetails(categories);
+            final List<Word> existingWords = wordRepository.findByCategoryUuidsWithDetails(categories);
 
-            // Check if any existing word has matching WordParts
             final Word matchingWord = findWordWithMatchingParts(existingWords, word);
 
             if (matchingWord != null) {
-                // Merge WordParts into the existing word
                 mergeWordParts(matchingWord, word);
 
-                // Add the category if not already present
                 if (!matchingWord.getCategories().contains(category)) {
                     matchingWord.addCategory(category);
                 }
 
-                // Set accepted to false as per requirements
                 matchingWord.setAccepted(false);
 
                 final Word savedWord = wordRepository.save(matchingWord);
@@ -98,7 +94,6 @@ class WordService implements WordFacade {
             }
         }
 
-        // No matching word found, create new word
         word.addCategory(category);
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
