@@ -73,7 +73,6 @@ class WordService implements WordFacade {
                             new CategoryFilterForm(null, null, null, CategoryMode.DICTIONARY, null, null),
                             PageableRequest.builder().singlePage(true).build())
                     .getItems().stream()
-                    .filter(c -> c.mode() == CategoryMode.DICTIONARY)
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
