@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,7 +32,6 @@ class WordController {
         private static final String WORDS = "/languages/{languageUuid}/categories/{categoryUuid}/words";
         private static final String WORD_BY_UUID = WORDS + "/{wordUuid}";
         private static final String WORD_ACCEPT = WORD_BY_UUID + "/accept";
-        private static final String WORD_STATUS = WORD_BY_UUID + "/status";
     }
 
     private final WordFacade wordFacade;
@@ -82,16 +80,6 @@ class WordController {
                        @PathVariable final UUID categoryUuid,
                        @PathVariable final UUID wordUuid) {
         return wordFacade.acceptWord(languageUuid, categoryUuid, wordUuid);
-    }
-
-    @PatchMapping(Routes.WORD_STATUS)
-    WordDto updateWordStatus(@PathVariable final UUID languageUuid,
-                             @PathVariable final UUID categoryUuid,
-                             @PathVariable final UUID wordUuid,
-                             @RequestParam(required = false) final Boolean accepted,
-                             @RequestParam(required = false) final Boolean chosen,
-                             @RequestParam(required = false) final Boolean toRepeat) {
-        return wordFacade.updateWordStatus(languageUuid, categoryUuid, wordUuid, accepted, chosen, toRepeat);
     }
 }
 

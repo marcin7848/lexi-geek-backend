@@ -20,7 +20,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -136,36 +135,6 @@ class WordService implements WordFacade {
         word.setAccepted(true);
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
-    }
-
-    @Override
-    @Transactional
-    public WordDto updateWordStatus(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid,
-                                    final Boolean accepted, final Boolean chosen, final Boolean toRepeat) {
-        categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
-
-        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
-
-        if (accepted != null) {
-            word.setAccepted(accepted);
-        }
-        if (chosen != null) {
-            word.setChosen(chosen);
-        }
-        if (toRepeat != null) {
-            word.setToRepeat(toRepeat);
-        }
-
-        final Word savedWord = wordRepository.save(word);
-        return WordMapper.entityToDto(savedWord);
-    }
-
-    private Set<Category> findCategoriesByNames(final UUID languageUuid, final Set<String> categoryNames) {
-        final Set<Category> categories = new HashSet<>();
-        // For now, we'll skip finding by names as it would require additional repository methods
-        // This can be enhanced later if needed
-        return categories;
     }
 
     private Word findWordWithMatchingParts(final List<Word> existingWords, final Word newWord) {
