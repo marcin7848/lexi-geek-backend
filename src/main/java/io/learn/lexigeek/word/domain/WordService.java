@@ -105,7 +105,7 @@ class WordService implements WordFacade {
                               final UUID wordUuid, final WordForm form) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Word word = wordRepository.findByUuid(wordUuid)
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         WordMapper.updateEntityFromForm(word, form);

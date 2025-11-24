@@ -14,24 +14,17 @@ import java.util.UUID;
 @Repository
 interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecificationExecutor<Word> {
 
+    Optional<Word> findByUuidAndCategories(final UUID uuid, final Set<Category> category);
+
     @Query("""
             SELECT w FROM Word w
                         LEFT JOIN FETCH w.wordParts wp
-                        LEFT JOIN FETCH w.wordStats ws 
-                        LEFT JOIN FETCH w.categories c 
-                        WHERE w.uuid = :uuid 
+                        LEFT JOIN FETCH w.categories c
+                        WHERE w.uuid = :uuid
                         AND EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid = :categoryUuid)
             """)
     Optional<Word> findByUuidAndCategoryUuid(@Param("uuid") final UUID uuid,
                                              @Param("categoryUuid") final UUID categoryUuid);
-
-    @Query("""
-            SELECT w FROM Word w
-                    LEFT JOIN FETCH w.wordParts wp
-                    LEFT JOIN FETCH w.categories c
-                    WHERE w.uuid = :uuid
-            """)
-    Optional<Word> findByUuidWithDetails(@Param("uuid") final UUID uuid);
 
     @Query("""
             SELECT DISTINCT w FROM Word w
