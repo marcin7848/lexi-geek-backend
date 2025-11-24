@@ -21,4 +21,6 @@ public interface WordFacade {
     void deleteWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
 
     WordDto acceptWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
+
+    WordDto chooseWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
 }

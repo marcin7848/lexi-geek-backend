@@ -32,6 +32,7 @@ class WordController {
         private static final String WORDS = "/languages/{languageUuid}/categories/{categoryUuid}/words";
         private static final String WORD_BY_UUID = WORDS + "/{wordUuid}";
         private static final String WORD_ACCEPT = WORD_BY_UUID + "/accept";
+        private static final String WORD_CHOOSE = WORD_BY_UUID + "/choose";
     }
 
     private final WordFacade wordFacade;
@@ -80,6 +81,13 @@ class WordController {
                        @PathVariable final UUID categoryUuid,
                        @PathVariable final UUID wordUuid) {
         return wordFacade.acceptWord(languageUuid, categoryUuid, wordUuid);
+    }
+
+    @PatchMapping(Routes.WORD_CHOOSE)
+    WordDto chooseWord(@PathVariable final UUID languageUuid,
+                       @PathVariable final UUID categoryUuid,
+                       @PathVariable final UUID wordUuid) {
+        return wordFacade.chooseWord(languageUuid, categoryUuid, wordUuid);
     }
 }
 

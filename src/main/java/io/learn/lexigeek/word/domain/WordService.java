@@ -125,7 +125,6 @@ class WordService implements WordFacade {
     }
 
     @Override
-    @Transactional
     public WordDto acceptWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
@@ -133,6 +132,18 @@ class WordService implements WordFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         word.setAccepted(true);
+        final Word savedWord = wordRepository.save(word);
+        return WordMapper.entityToDto(savedWord);
+    }
+
+    @Override
+    public WordDto chooseWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
+        categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
+
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
+
+        word.setChosen(true);
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
     }
