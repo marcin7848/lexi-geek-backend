@@ -28,7 +28,6 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
     @Query("""
             SELECT w FROM Word w
                     LEFT JOIN FETCH w.wordParts wp
-                    LEFT JOIN FETCH w.wordStats ws
                     LEFT JOIN FETCH w.categories c
                     WHERE w.uuid = :uuid
             """)

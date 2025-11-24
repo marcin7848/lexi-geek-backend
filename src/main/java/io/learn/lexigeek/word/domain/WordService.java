@@ -105,23 +105,10 @@ class WordService implements WordFacade {
                               final UUID wordUuid, final WordForm form) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Word word = wordRepository.findByUuidWithDetails(wordUuid)
+        final Word word = wordRepository.findByUuid(wordUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         WordMapper.updateEntityFromForm(word, form);
-
-        // Update categories if provided
-//        if (form.categoryNames() != null) {
-//            word.getCategories().clear();
-//            final Category mainCategory = categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid)
-//                    .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-//            word.addCategory(mainCategory);
-//
-//            if (!form.categoryNames().isEmpty()) {
-//                final Set<Category> additionalCategories = findCategoriesByNames(languageUuid, form.categoryNames());
-//                additionalCategories.forEach(word::addCategory);
-//            }
-//        }
 
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
