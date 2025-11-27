@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -136,6 +137,17 @@ public class CategoryService implements CategoryFacade {
 
         categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
+    }
+
+    @Override
+    public void verifyCategoriesAccess(final UUID languageUuid, final List<UUID> categoryUuids) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final long count = categoryRepository.countByUuidInAndLanguageUuid(categoryUuids, languageUuid);
+
+        if (count != categoryUuids.size()) {
+            throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
+        }
     }
 
     private Category validateAndGetParent(final UUID languageUuid, final UUID categoryUuid, final UUID parentUuid) {

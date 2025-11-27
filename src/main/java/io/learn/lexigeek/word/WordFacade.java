@@ -2,6 +2,7 @@ package io.learn.lexigeek.word;
 
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
+import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
 import io.learn.lexigeek.word.dto.WordForm;
@@ -23,4 +24,6 @@ public interface WordFacade {
     WordDto acceptWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
 
     WordDto chooseWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
+
+    WordDto updateWordCategories(final UUID languageUuid, final UUID wordUuid, final UpdateWordCategoriesForm form);
 }

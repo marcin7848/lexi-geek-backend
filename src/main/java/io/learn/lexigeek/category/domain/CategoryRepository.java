@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,4 +65,10 @@ interface CategoryRepository extends UUIDAwareJpaRepository<Category, Long>, Jpa
                      AND depth > 0
             """, nativeQuery = true)
     boolean isInParentHierarchy(@Param("startUuid") final String startUuid, @Param("targetUuid") final String targetUuid);
+
+    @Query("""
+            SELECT COUNT(c) FROM Category c WHERE c.uuid IN :categoryUuids AND c.language.uuid = :languageUuid
+            """)
+    long countByUuidInAndLanguageUuid(@Param("categoryUuids") final List<UUID> categoryUuids,
+                                      @Param("languageUuid") final UUID languageUuid);
 }

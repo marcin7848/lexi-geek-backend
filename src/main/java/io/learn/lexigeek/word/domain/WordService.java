@@ -11,6 +11,7 @@ import io.learn.lexigeek.common.pageable.PageableUtils;
 import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.word.WordFacade;
+import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
 import io.learn.lexigeek.word.dto.WordForm;
@@ -184,5 +185,39 @@ class WordService implements WordFacade {
                 existingWord.addWordPart(wordPart);
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public WordDto updateWordCategories(final UUID languageUuid, final UUID wordUuid, final UpdateWordCategoriesForm form) {
+        categoryFacade.verifyCategoriesAccess(languageUuid, form.categoryUuids());
+
+        final Word word = wordRepository.findByUuidAndLanguageUuid(wordUuid, languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
+
+        final List<Category> newCategories = categoryRepository.findAllByUuidIn(form.categoryUuids());
+
+        if (newCategories.size() != form.categoryUuids().size()) {
+            throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
+        }
+
+        final Set<Category> currentCategories = word.getCategories();
+
+        for (final Category newCategory : newCategories) {
+            if (!currentCategories.contains(newCategory)) {
+                word.addCategory(newCategory);
+            }
+        }
+
+        final Set<Category> categoriesToRemove = currentCategories.stream()
+                .filter(category -> !newCategories.contains(category))
+                .collect(toSet());
+
+        for (final Category categoryToRemove : categoriesToRemove) {
+            word.removeCategory(categoryToRemove);
+        }
+
+        final Word savedWord = wordRepository.save(word);
+        return WordMapper.entityToDto(savedWord);
     }
 }

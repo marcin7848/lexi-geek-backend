@@ -3,6 +3,7 @@ package io.learn.lexigeek.word.controller;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.word.WordFacade;
+import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
 import io.learn.lexigeek.word.dto.WordForm;
@@ -33,6 +34,7 @@ class WordController {
         private static final String WORD_BY_UUID = WORDS + "/{wordUuid}";
         private static final String WORD_ACCEPT = WORD_BY_UUID + "/accept";
         private static final String WORD_CHOOSE = WORD_BY_UUID + "/choose";
+        private static final String WORD_CATEGORIES = "/languages/{languageUuid}/words/{wordUuid}/categories";
     }
 
     private final WordFacade wordFacade;
@@ -88,6 +90,13 @@ class WordController {
                        @PathVariable final UUID categoryUuid,
                        @PathVariable final UUID wordUuid) {
         return wordFacade.chooseWord(languageUuid, categoryUuid, wordUuid);
+    }
+
+    @PostMapping(Routes.WORD_CATEGORIES)
+    WordDto updateWordCategories(@PathVariable final UUID languageUuid,
+                                 @PathVariable final UUID wordUuid,
+                                 @RequestBody @Valid final UpdateWordCategoriesForm form) {
+        return wordFacade.updateWordCategories(languageUuid, wordUuid, form);
     }
 }
 
