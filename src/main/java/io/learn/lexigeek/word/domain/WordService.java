@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -195,27 +196,20 @@ class WordService implements WordFacade {
         final Word word = wordRepository.findByUuidAndLanguageUuid(wordUuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
-        final List<Category> newCategories = categoryRepository.findAllByUuidIn(form.categoryUuids());
+        final List<Category> foundCategories = categoryRepository.findAllByUuidIn(form.categoryUuids());
 
-        if (newCategories.size() != form.categoryUuids().size()) {
+        if (foundCategories.size() != form.categoryUuids().size()) {
             throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
         }
 
+        final Set<Category> newCategories = new HashSet<>(foundCategories);
         final Set<Category> currentCategories = word.getCategories();
 
-        for (final Category newCategory : newCategories) {
-            if (!currentCategories.contains(newCategory)) {
-                word.addCategory(newCategory);
-            }
-        }
+        newCategories.stream()
+                .filter(category -> !currentCategories.contains(category))
+                .forEach(word::addCategory);
 
-        final Set<Category> categoriesToRemove = currentCategories.stream()
-                .filter(category -> !newCategories.contains(category))
-                .collect(toSet());
-
-        for (final Category categoryToRemove : categoriesToRemove) {
-            word.removeCategory(categoryToRemove);
-        }
+        currentCategories.removeIf(category -> !newCategories.contains(category));
 
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
