@@ -7,7 +7,6 @@ import io.learn.lexigeek.word.dto.WordPartForm;
 import io.learn.lexigeek.word.dto.WordStatsDto;
 import lombok.experimental.UtilityClass;
 
-import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -55,28 +54,20 @@ class WordMapper {
     }
 
     WordDto entityToDto(final Word word) {
-        final LocalDateTime lastTimeRepeated = word.getWordStats().stream()
-                .filter(stats -> Boolean.TRUE.equals(stats.getCorrect()))
-                .map(WordStats::getAnswerTime)
-                .max(java.util.Comparator.naturalOrder())
-                .orElse(null);
-
         return new WordDto(
                 word.getUuid(),
                 word.getAccepted(),
                 word.getChosen(),
                 word.getComment(),
                 word.getCreated(),
-                lastTimeRepeated,
+                word.getLastTimeRepeated(),
                 word.getMechanism(),
+                word.getRepeated(),
                 word.getResetTime(),
                 word.getToRepeat(),
                 word.getWordParts().stream()
                         .sorted((a, b) -> a.getPosition().compareTo(b.getPosition()))
                         .map(WordMapper::wordPartEntityToDto)
-                        .collect(Collectors.toList()),
-                word.getWordStats().stream()
-                        .map(WordMapper::wordStatsEntityToDto)
                         .collect(Collectors.toList()),
                 word.getCategories().stream()
                         .map(Category::getName)

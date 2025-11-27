@@ -14,10 +14,9 @@ public record WordDto(UUID uuid,
                       LocalDateTime created,
                       LocalDateTime lastTimeRepeated,
                       WordMechanism mechanism,
+                      Integer repeated,
                       LocalDateTime resetTime,
                       Boolean toRepeat,
                       List<WordPartDto> wordParts,
-                      List<WordStatsDto> wordStats,
                       Set<String> categoryNames) {
 }
-
