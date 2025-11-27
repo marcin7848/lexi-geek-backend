@@ -143,7 +143,7 @@ class WordService implements WordFacade {
         final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
-        word.setChosen(true);
+        word.setChosen(!word.getChosen());
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
     }
