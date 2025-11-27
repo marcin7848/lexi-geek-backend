@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset marcin.kaczor:5 labels:LG-5
+--changeset marcin.kaczor:5 labels:LG-4
 
 ALTER TABLE "word_stats"
     DROP COLUMN answered,
@@ -15,5 +15,3 @@ ALTER TABLE "words"
 --rollback ALTER TABLE "word_stats" DROP COLUMN correct;
 --rollback ALTER TABLE "word_stats" ADD COLUMN to_answer INTEGER NOT NULL DEFAULT 0;
 --rollback ALTER TABLE "word_stats" ADD COLUMN answered INTEGER NOT NULL DEFAULT 0;
-
-ó
