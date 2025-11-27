@@ -1,5 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.category.domain.CategoryMode;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import jakarta.persistence.Column;
@@ -30,7 +31,9 @@ class Category extends AbstractUuidEntity {
     @Column(name = "mode", nullable = false, length = 10)
     private CategoryMode mode;
 
-
+    @Enumerated(EnumType.STRING)
+    @Column(name = "method", nullable = false, length = 18)
+    private CategoryMethod method;
 
 
 
