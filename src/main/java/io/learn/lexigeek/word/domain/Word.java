@@ -42,9 +42,6 @@ class Word extends AbstractUuidEntity {
     @Column(name = "created", nullable = false)
     private LocalDateTime created = LocalDateTime.now();
 
-    @Column(name = "last_time_repeated")
-    private LocalDateTime lastTimeRepeated;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "mechanism", nullable = false, length = 5)
     private WordMechanism mechanism;
