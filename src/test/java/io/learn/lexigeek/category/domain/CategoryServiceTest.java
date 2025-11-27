@@ -394,10 +394,11 @@ class CategoryServiceTest {
             existingCategory = new Category();
             existingCategory.setUuid(categoryUuid);
             existingCategory.setName("Category to delete");
+            existingCategory.setPosition(2);
         }
 
         @Test
-        void success_deletesExisting() {
+        void success_deletesExistingAndDecrementsPositionsAfter() {
             // Given
             doNothing().when(languageFacade).verifyLanguageOwnership(languageUuid);
             when(categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid))
@@ -408,6 +409,41 @@ class CategoryServiceTest {
 
             // Then
             verify(categoryRepository).delete(existingCategory);
+            verify(categoryRepository).decrementPositionsAfter(languageUuid, 2);
+        }
+
+        @Test
+        void success_deletesFirstCategory_updatesPositions() {
+            // Given
+            existingCategory.setPosition(0);
+
+            doNothing().when(languageFacade).verifyLanguageOwnership(languageUuid);
+            when(categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid))
+                    .thenReturn(Optional.of(existingCategory));
+
+            // When
+            categoryService.deleteCategory(languageUuid, categoryUuid);
+
+            // Then
+            verify(categoryRepository).delete(existingCategory);
+            verify(categoryRepository).decrementPositionsAfter(languageUuid, 0);
+        }
+
+        @Test
+        void success_deletesLastCategory_updatesPositions() {
+            // Given
+            existingCategory.setPosition(10);
+
+            doNothing().when(languageFacade).verifyLanguageOwnership(languageUuid);
+            when(categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid))
+                    .thenReturn(Optional.of(existingCategory));
+
+            // When
+            categoryService.deleteCategory(languageUuid, categoryUuid);
+
+            // Then
+            verify(categoryRepository).delete(existingCategory);
+            verify(categoryRepository).decrementPositionsAfter(languageUuid, 10);
         }
 
         @Test
@@ -423,6 +459,7 @@ class CategoryServiceTest {
                     .hasFieldOrPropertyWithValue("error", ErrorCodes.CATEGORY_NOT_FOUND);
 
             verify(categoryRepository, never()).delete(any(Category.class));
+            verify(categoryRepository, never()).decrementPositionsAfter(any(UUID.class), any(Integer.class));
         }
 
         @Test
@@ -436,6 +473,7 @@ class CategoryServiceTest {
                     () -> categoryService.deleteCategory(languageUuid, categoryUuid));
 
             verify(categoryRepository, never()).delete(any(Category.class));
+            verify(categoryRepository, never()).decrementPositionsAfter(any(UUID.class), any(Integer.class));
         }
     }
 

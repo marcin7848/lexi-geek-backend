@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -92,7 +93,11 @@ public class CategoryService implements CategoryFacade {
 
         final Category category = categoryRepository.findByUuidAndLanguageUuid(uuid, languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, uuid));
+
+        final Integer deletedPosition = category.getPosition();
+
         categoryRepository.delete(category);
+        categoryRepository.decrementPositionsAfter(languageUuid, deletedPosition);
     }
 
     @Override
@@ -124,6 +129,25 @@ public class CategoryService implements CategoryFacade {
         category.setParent(newParent);
         category.setPosition(newPosition);
         categoryRepository.save(category);
+    }
+
+    @Override
+    public void verifyCategoryAccess(final UUID languageUuid, final UUID categoryUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        categoryRepository.findByUuidAndLanguageUuid(categoryUuid, languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
+    }
+
+    @Override
+    public void verifyCategoriesAccess(final UUID languageUuid, final List<UUID> categoryUuids) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final long count = categoryRepository.countByUuidInAndLanguageUuid(categoryUuids, languageUuid);
+
+        if (count != categoryUuids.size()) {
+            throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
+        }
     }
 
     private Category validateAndGetParent(final UUID languageUuid, final UUID categoryUuid, final UUID parentUuid) {

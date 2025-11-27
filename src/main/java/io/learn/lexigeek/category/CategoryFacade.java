@@ -7,6 +7,7 @@ import io.learn.lexigeek.category.dto.UpdateCategoryPositionForm;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface CategoryFacade {
@@ -20,4 +21,8 @@ public interface CategoryFacade {
     void deleteCategory(final UUID languageUuid, final UUID uuid);
 
     void updateCategoryPosition(final UUID languageUuid, final UUID uuid, final UpdateCategoryPositionForm form);
+
+    void verifyCategoryAccess(final UUID languageUuid, final UUID categoryUuid);
+
+    void verifyCategoriesAccess(final UUID languageUuid, final List<UUID> categoryUuids);
 }

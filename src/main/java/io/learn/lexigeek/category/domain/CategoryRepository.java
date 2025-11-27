@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,24 +15,38 @@ import java.util.UUID;
 interface CategoryRepository extends UUIDAwareJpaRepository<Category, Long>, JpaSpecificationExecutor<Category> {
     Optional<Category> findByUuidAndLanguageUuid(final UUID uuid, final UUID languageUuid);
 
-    @Query("SELECT COALESCE(MAX(c.position), -1) FROM Category c WHERE c.language.uuid = :languageUuid")
+    @Query("""
+            SELECT COALESCE(MAX(c.position), -1) FROM Category c WHERE c.language.uuid = :languageUuid
+            """)
     Integer findMaxPositionByLanguageUuid(@Param("languageUuid") final UUID languageUuid);
 
     @Modifying
-    @Query("UPDATE Category c SET c.position = c.position + 1 WHERE c.language.uuid = :languageUuid " +
-            "AND c.position >= :fromPosition AND c.position < :toPosition AND c.uuid != :excludeUuid")
+    @Query("""
+            UPDATE Category c SET c.position = c.position + 1 WHERE c.language.uuid = :languageUuid
+                        AND c.position >= :fromPosition AND c.position < :toPosition AND c.uuid != :excludeUuid
+            """)
     void incrementPositionsBetween(@Param("languageUuid") final UUID languageUuid,
                                    @Param("fromPosition") final Integer fromPosition,
                                    @Param("toPosition") final Integer toPosition,
                                    @Param("excludeUuid") final UUID excludeUuid);
 
     @Modifying
-    @Query("UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid " +
-            "AND c.position > :fromPosition AND c.position <= :toPosition AND c.uuid != :excludeUuid")
+    @Query("""
+            UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid
+                        AND c.position > :fromPosition AND c.position <= :toPosition AND c.uuid != :excludeUuid
+            """)
     void decrementPositionsBetween(@Param("languageUuid") final UUID languageUuid,
                                    @Param("fromPosition") final Integer fromPosition,
                                    @Param("toPosition") final Integer toPosition,
                                    @Param("excludeUuid") final UUID excludeUuid);
+
+    @Modifying
+    @Query("""
+            UPDATE Category c SET c.position = c.position - 1 WHERE c.language.uuid = :languageUuid 
+                        AND c.position > :deletedPosition
+            """)
+    void decrementPositionsAfter(@Param("languageUuid") final UUID languageUuid,
+                                 @Param("deletedPosition") final Integer deletedPosition);
 
     @Query(value = """
             WITH RECURSIVE parent_hierarchy AS (
@@ -50,4 +65,10 @@ interface CategoryRepository extends UUIDAwareJpaRepository<Category, Long>, Jpa
                      AND depth > 0
             """, nativeQuery = true)
     boolean isInParentHierarchy(@Param("startUuid") final String startUuid, @Param("targetUuid") final String targetUuid);
+
+    @Query("""
+            SELECT COUNT(c) FROM Category c WHERE c.uuid IN :categoryUuids AND c.language.uuid = :languageUuid
+            """)
+    long countByUuidInAndLanguageUuid(@Param("categoryUuids") final List<UUID> categoryUuids,
+                                      @Param("languageUuid") final UUID languageUuid);
 }
