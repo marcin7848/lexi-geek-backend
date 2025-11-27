@@ -93,9 +93,9 @@ class WordMapper {
     WordStatsDto wordStatsEntityToDto(final WordStats wordStats) {
         return new WordStatsDto(
                 wordStats.getUuid(),
-                wordStats.getAnswered(),
-                wordStats.getToAnswer(),
-                wordStats.getMethod()
+                wordStats.getCorrect(),
+                wordStats.getMethod(),
+                wordStats.getAnswerTime()
         );
     }
 }
