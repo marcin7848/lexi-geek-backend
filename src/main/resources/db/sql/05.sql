@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset marcin.kaczor:5 labels:LG-G
+--changeset marcin.kaczor:5 labels:LG-4
 
 ALTER TABLE "word_stats"
     DROP COLUMN answered,
