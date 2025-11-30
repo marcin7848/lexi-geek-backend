@@ -61,7 +61,7 @@ class PublicWordSpecification implements Specification<Word> {
         final Root<Language> userLanguageRoot = currentUserLanguageSubquery.from(Language.class);
         currentUserLanguageSubquery.select(userLanguageRoot.get(AbstractEntity.Fields.id))
                 .where(criteriaBuilder.equal(
-                        userLanguageRoot.get("account").get(AbstractEntity.Fields.id),
+                        userLanguageRoot.get(Language.Fields.account).get(AbstractEntity.Fields.id),
                         currentAccountId
                 ));
 
