@@ -7,6 +7,6 @@ public record LanguageDto(UUID uuid,
                           String shortcut,
                           String codeForSpeech,
                           String codeForTranslator,
-                          boolean hidden,
+                          boolean isPublic,
                           String specialLetters) {
 }

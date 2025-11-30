@@ -40,7 +40,7 @@ class LanguageSpecification implements Specification<Language> {
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.shortcut), form.shortcut());
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.codeForSpeech), form.codeForSpeech());
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.codeForTranslator), form.codeForTranslator());
-        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.hidden), form.hidden());
+        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.isPublic), form.isPublic());
         addLikePredicate(criteriaBuilder, predicates, root, r -> r.get(Language.Fields.specialLetters), form.specialLetters());
 
         return buildAndPredicates(criteriaBuilder, predicates);

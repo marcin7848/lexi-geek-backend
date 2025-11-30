@@ -18,7 +18,7 @@ class LanguageMapper {
         language.setShortcut(form.shortcut());
         language.setCodeForSpeech(form.codeForSpeech());
         language.setCodeForTranslator(form.codeForTranslator());
-        language.setHidden(form.hidden());
+        language.setPublic(form.isPublic());
         language.setSpecialLetters(form.specialLetters());
     }
 
@@ -29,7 +29,7 @@ class LanguageMapper {
                 language.getShortcut(),
                 language.getCodeForSpeech(),
                 language.getCodeForTranslator(),
-                language.isHidden(),
+                language.isPublic(),
                 language.getSpecialLetters());
     }
 }
