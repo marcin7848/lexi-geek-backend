@@ -42,17 +42,11 @@ class PublicWordService implements PublicWordFacade {
                                            final PageableRequest pageableRequest) {
         pageableRequest.addDefaultSorts(new SortOrder(Word.Fields.created, Sort.Direction.DESC));
 
-        // Verify user has access to this category
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        // Get current user
         final AccountDto currentAccount = accountFacade.getLoggedAccount();
 
-        final PublicWordSpecification specification = new PublicWordSpecification(
-                form,
-                categoryUuid,
-                currentAccount.id()
-        );
+        final PublicWordSpecification specification = new PublicWordSpecification(form, categoryUuid, currentAccount.id());
 
         return PageableUtils.toDto(
                 wordRepository.findAll(specification, PageableUtils.createPageable(pageableRequest))
