@@ -3,13 +3,7 @@ package io.learn.lexigeek.word.domain;
 import io.learn.lexigeek.common.entity.AbstractEntity;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import io.learn.lexigeek.word.dto.PublicWordFilterForm;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -47,17 +41,17 @@ class PublicWordSpecification implements Specification<Word> {
         predicates.add(criteriaBuilder.isTrue(languageJoin.get(Language.Fields.isPublic)));
 
         // Only fetch words from languages with the same shortcut as the requested language
-        if (languageUuid != null) {
-            final Subquery<String> languageShortcutSubquery = query.subquery(String.class);
-            final Root<Language> requestedLanguageRoot = languageShortcutSubquery.from(Language.class);
-            languageShortcutSubquery.select(requestedLanguageRoot.get(Language.Fields.shortcut))
-                    .where(criteriaBuilder.equal(requestedLanguageRoot.get(AbstractUuidEntity.Fields.uuid), languageUuid));
 
-            predicates.add(criteriaBuilder.equal(
-                    languageJoin.get(Language.Fields.shortcut),
-                    languageShortcutSubquery
-            ));
-        }
+        final Subquery<String> languageShortcutSubquery = query.subquery(String.class);
+        final Root<Language> requestedLanguageRoot = languageShortcutSubquery.from(Language.class);
+        languageShortcutSubquery.select(requestedLanguageRoot.get(Language.Fields.shortcut))
+                .where(criteriaBuilder.equal(requestedLanguageRoot.get(AbstractUuidEntity.Fields.uuid), languageUuid));
+
+        predicates.add(criteriaBuilder.equal(
+                languageJoin.get(Language.Fields.shortcut),
+                languageShortcutSubquery
+        ));
+
 
         // Only fetch words from other users (not from current user's languages)
         final Subquery<Long> currentUserLanguageSubquery = query.subquery(Long.class);
@@ -69,6 +63,17 @@ class PublicWordSpecification implements Specification<Word> {
                 ));
 
         predicates.add(criteriaBuilder.not(criteriaBuilder.in(languageJoin.get(AbstractEntity.Fields.id)).value(currentUserLanguageSubquery)));
+
+        // Exclude already viewed words
+        final Subquery<Long> viewedWordsSubquery = query.subquery(Long.class);
+        final Root<ViewedPublicWord> viewedWordRoot = viewedWordsSubquery.from(ViewedPublicWord.class);
+        viewedWordsSubquery.select(viewedWordRoot.get(ViewedPublicWord.Fields.word).get(AbstractEntity.Fields.id))
+                .where(criteriaBuilder.and(
+                        criteriaBuilder.equal(viewedWordRoot.get(ViewedPublicWord.Fields.word).get(AbstractEntity.Fields.id), root.get(AbstractEntity.Fields.id)),
+                        criteriaBuilder.equal(viewedWordRoot.get(ViewedPublicWord.Fields.accountId), currentAccountId)
+                ));
+
+        predicates.add(criteriaBuilder.not(criteriaBuilder.exists(viewedWordsSubquery)));
 
         // Filter by mechanism (skip if null, don't filter for ALL)
         if (form.mechanism() != null) {
