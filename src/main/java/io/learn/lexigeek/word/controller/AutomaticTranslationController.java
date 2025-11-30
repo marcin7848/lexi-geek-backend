@@ -25,7 +25,8 @@ class AutomaticTranslationController {
     @ResponseStatus(HttpStatus.OK)
     void autoTranslate(@PathVariable final UUID languageUuid,
                        @PathVariable final UUID categoryUuid,
-                       @RequestBody @Valid final AutoTranslateForm form) {
+                       @RequestBody @Valid final AutoTranslateForm form) throws InterruptedException {
+        Thread.sleep(5000);
         automaticTranslationFacade.autoTranslate(languageUuid, categoryUuid, form);
     }
 }

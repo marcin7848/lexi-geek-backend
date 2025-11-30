@@ -1,4 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
-record AutomaticTranslationWord(String question, String answer) {
+import java.util.List;
+
+record AutomaticTranslationWord(String question, List<String> answers) {
 }
