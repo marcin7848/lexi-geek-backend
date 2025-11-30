@@ -32,8 +32,8 @@ class Language extends AbstractUuidEntity {
     @Column(name = "code_for_translator", nullable = false, length = 10)
     private String codeForTranslator;
 
-    @Column(name = "hidden", nullable = false)
-    private boolean hidden;
+    @Column(name = "public", nullable = false)
+    private boolean isPublic;
 
     @Column(name = "special_letters", nullable = false, length = 255)
     private String specialLetters;

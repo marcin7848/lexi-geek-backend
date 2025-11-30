@@ -9,7 +9,7 @@ CREATE TABLE "languages"
     shortcut            VARCHAR(10)  NOT NULL,
     code_for_speech     VARCHAR(10)  NOT NULL DEFAULT '',
     code_for_translator VARCHAR(10)  NOT NULL DEFAULT '',
-    hidden              BOOLEAN      NOT NULL DEFAULT false,
+    public              BOOLEAN      NOT NULL DEFAULT true,
     special_letters     VARCHAR(255) NOT NULL DEFAULT '',
     account_id          BIGINT       NOT NULL
         CONSTRAINT fk_languages_account_id REFERENCES accounts (id) ON DELETE CASCADE

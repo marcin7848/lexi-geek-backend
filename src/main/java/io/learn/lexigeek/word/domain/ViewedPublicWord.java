@@ -1,6 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
-import io.learn.lexigeek.common.entity.AbstractUuidEntity;
+import io.learn.lexigeek.common.entity.AbstractEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,22 +9,26 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
-@Entity(name = "WordLanguage")
-@Table(name = "languages")
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "viewed_public_words")
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
+@Setter
 @Getter
 @FieldNameConstants
-class Language extends AbstractUuidEntity {
+class ViewedPublicWord extends AbstractEntity {
 
-    @Column(name = "shortcut", nullable = false, length = 10)
-    private String shortcut;
-
-    @Column(name = "public", nullable = false)
-    private boolean isPublic;
+    @Column(name = "account_id", nullable = false)
+    private Long accountId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id")
-    private Account account;
+    @JoinColumn(name = "word_id", nullable = false)
+    private Word word;
+
+    @Column(name = "viewed_at", nullable = false)
+    private LocalDateTime viewedAt = LocalDateTime.now();
 }
