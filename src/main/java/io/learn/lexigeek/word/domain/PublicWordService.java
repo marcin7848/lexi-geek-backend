@@ -46,7 +46,7 @@ class PublicWordService implements PublicWordFacade {
 
         final AccountDto currentAccount = accountFacade.getLoggedAccount();
 
-        final PublicWordSpecification specification = new PublicWordSpecification(form, categoryUuid, currentAccount.id());
+        final PublicWordSpecification specification = new PublicWordSpecification(form, languageUuid, currentAccount.id());
 
         return PageableUtils.toDto(
                 wordRepository.findAll(specification, PageableUtils.createPageable(pageableRequest))

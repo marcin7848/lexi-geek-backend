@@ -27,7 +27,7 @@ import static io.learn.lexigeek.common.utils.PredicateUtils.buildAndPredicates;
 class PublicWordSpecification implements Specification<Word> {
 
     private final transient PublicWordFilterForm form;
-    private final transient UUID categoryUuid;
+    private final transient UUID languageUuid;
     private final transient Long currentAccountId;
 
     @Override
@@ -39,38 +39,40 @@ class PublicWordSpecification implements Specification<Word> {
         // Only accepted words (public words)
         predicates.add(criteriaBuilder.isTrue(root.get(Word.Fields.accepted)));
 
-        // Words from other users (not created by current user's categories)
-        // Check if word exists in any of current user's categories
-        if (categoryUuid != null) {
-            final Subquery<Long> userCategorySubquery = query.subquery(Long.class);
-            final Root<Word> userWordRoot = userCategorySubquery.from(Word.class);
-            final Join<Word, Category> userCategoryJoin = userWordRoot.join(Word.Fields.categories, JoinType.INNER);
-            final Join<Category, Language> userLanguageJoin = userCategoryJoin.join("language", JoinType.INNER);
+        // Join with categories and languages to apply filters
+        final Join<Object, Object> categoryJoin = root.join(Word.Fields.categories, JoinType.INNER);
+        final Join<Object, Object> languageJoin = categoryJoin.join("language", JoinType.INNER);
 
-            userCategorySubquery.select(userWordRoot.get(AbstractEntity.Fields.id))
-                    .where(criteriaBuilder.and(
-                            criteriaBuilder.equal(userWordRoot.get(AbstractEntity.Fields.id), root.get(AbstractEntity.Fields.id)),
-                            criteriaBuilder.equal(userCategoryJoin.get(AbstractUuidEntity.Fields.uuid), categoryUuid)
-                    ));
+        // Only fetch words from languages with the same shortcut as the requested language
+        if (languageUuid != null) {
+            final Subquery<String> languageShortcutSubquery = query.subquery(String.class);
+            final Root<Language> requestedLanguageRoot = languageShortcutSubquery.from(Language.class);
+            languageShortcutSubquery.select(requestedLanguageRoot.get(Language.Fields.shortcut))
+                    .where(criteriaBuilder.equal(requestedLanguageRoot.get(AbstractUuidEntity.Fields.uuid), languageUuid));
 
-            predicates.add(criteriaBuilder.not(criteriaBuilder.exists(userCategorySubquery)));
+            predicates.add(criteriaBuilder.equal(
+                    languageJoin.get(Language.Fields.shortcut),
+                    languageShortcutSubquery
+            ));
         }
 
-        // Exclude viewed words
-        final Subquery<Long> viewedSubquery = query.subquery(Long.class);
-        final Root<ViewedPublicWord> viewedRoot = viewedSubquery.from(ViewedPublicWord.class);
-        viewedSubquery.select(viewedRoot.get(ViewedPublicWord.Fields.word).get(AbstractEntity.Fields.id))
-                .where(criteriaBuilder.and(
-                        criteriaBuilder.equal(viewedRoot.get(ViewedPublicWord.Fields.word).get(AbstractEntity.Fields.id), root.get(AbstractEntity.Fields.id)),
-                        criteriaBuilder.equal(viewedRoot.get(ViewedPublicWord.Fields.accountId), currentAccountId)
+        // Only fetch words from other users (not from current user's languages)
+        final Subquery<Long> currentUserLanguageSubquery = query.subquery(Long.class);
+        final Root<Language> userLanguageRoot = currentUserLanguageSubquery.from(Language.class);
+        currentUserLanguageSubquery.select(userLanguageRoot.get(AbstractEntity.Fields.id))
+                .where(criteriaBuilder.equal(
+                        userLanguageRoot.get("account").get(AbstractEntity.Fields.id),
+                        currentAccountId
                 ));
 
-        predicates.add(criteriaBuilder.not(criteriaBuilder.exists(viewedSubquery)));
+        predicates.add(criteriaBuilder.not(criteriaBuilder.in(languageJoin.get(AbstractEntity.Fields.id)).value(currentUserLanguageSubquery)));
 
-        // Filter by mechanism
-        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.mechanism), form.mechanism());
+        // Filter by mechanism (skip if null, don't filter for ALL)
+        if (form.mechanism() != null) {
+            addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.mechanism), form.mechanism());
+        }
 
-        // Filter by search text
+        // Filter by search text (searches in comment or word parts)
         if (form.searchText() != null && !form.searchText().isBlank()) {
             final String searchPattern = "%" + form.searchText().toLowerCase() + "%";
             final Predicate commentPredicate = criteriaBuilder.like(
@@ -87,9 +89,8 @@ class PublicWordSpecification implements Specification<Word> {
             predicates.add(criteriaBuilder.or(commentPredicate, wordPartPredicate));
         }
 
-        // Filter by category name
+        // Filter by category name (uses LIKE for partial matching)
         if (form.categoryName() != null && !form.categoryName().isBlank()) {
-            final Join<Word, Category> categoryJoin = root.join(Word.Fields.categories, JoinType.INNER);
             predicates.add(criteriaBuilder.like(
                     criteriaBuilder.lower(categoryJoin.get("name")),
                     "%" + form.categoryName().toLowerCase() + "%"
