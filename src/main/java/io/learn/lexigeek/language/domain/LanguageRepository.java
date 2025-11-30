@@ -16,10 +16,10 @@ import java.util.UUID;
 interface LanguageRepository extends UUIDAwareJpaRepository<Language, Long>, JpaSpecificationExecutor<Language> {
     Optional<Language> findByUuidAndAccountId(final UUID uuid, final Long accountId);
 
-    @Query("SELECT new io.learn.lexigeek.language.dto.ShortcutDto(l.name, l.shortcut, CAST(COUNT(l.shortcut) AS int)) " +
+    @Query("SELECT new io.learn.lexigeek.language.dto.ShortcutDto(MIN(l.name), l.shortcut, CAST(COUNT(l.shortcut) AS int)) " +
             "FROM Language l " +
             "WHERE (:shortcut IS NULL OR :shortcut = '' OR LOWER(l.shortcut) LIKE LOWER(CONCAT('%', :shortcut, '%'))) " +
-            "GROUP BY l.name, l.shortcut " +
+            "GROUP BY l.shortcut " +
             "ORDER BY COUNT(l.shortcut) DESC")
     List<ShortcutDto> findPopularShortcuts(@Param("shortcut") final String shortcut, final Pageable pageable);
 }
