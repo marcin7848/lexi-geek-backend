@@ -21,6 +21,9 @@ class Language extends AbstractUuidEntity {
     @Column(name = "shortcut", nullable = false, length = 10)
     private String shortcut;
 
+    @Column(name = "public", nullable = false)
+    private boolean isPublic;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id")
     private Account account;
