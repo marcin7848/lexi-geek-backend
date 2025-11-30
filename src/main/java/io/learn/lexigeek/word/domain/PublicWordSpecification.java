@@ -43,6 +43,9 @@ class PublicWordSpecification implements Specification<Word> {
         final Join<Object, Object> categoryJoin = root.join(Word.Fields.categories, JoinType.INNER);
         final Join<Object, Object> languageJoin = categoryJoin.join("language", JoinType.INNER);
 
+        // Only fetch words from public languages
+        predicates.add(criteriaBuilder.isTrue(languageJoin.get(Language.Fields.isPublic)));
+
         // Only fetch words from languages with the same shortcut as the requested language
         if (languageUuid != null) {
             final Subquery<String> languageShortcutSubquery = query.subquery(String.class);
