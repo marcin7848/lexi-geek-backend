@@ -165,7 +165,6 @@ class RepeatingService implements RepeatingFacade {
         final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
-        // Verify word is in session queue
         final List<Word> wordQueue = session.getWordQueue();
         final Word word = wordQueue.stream()
                 .filter(w -> w.getUuid().equals(wordUuid))
@@ -318,10 +317,6 @@ class RepeatingService implements RepeatingFacade {
                 .map(WordStats::getAnswerTime)
                 .max(LocalDateTime::compareTo)
                 .orElse(null);
-
-        if (lastAnswerTime == null) {
-            return false;
-        }
 
         final LocalDateTime resetTime = word.getResetTime();
         return lastAnswerTime.isAfter(resetTime);
