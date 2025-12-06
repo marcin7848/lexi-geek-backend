@@ -4,4 +4,3 @@ public record CheckAnswerResultDto(Boolean correct,
                                    Integer wordsLeft,
                                    Boolean sessionActive) {
 }
-

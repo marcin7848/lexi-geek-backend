@@ -171,13 +171,11 @@ class RepeatingService implements RepeatingFacade {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid));
 
-        // Check answers
-        final boolean correct = checkAnswers(word, form.answers());
+        final boolean correct = checkAnswers(word, form);
 
-        // Create word statistics entry
         final WordStats wordStats = new WordStats();
         wordStats.setCorrect(correct);
-        wordStats.setMethod(convertRepeatMethodToWordMethod(session.getMethod()));
+        wordStats.setMethod(form.method());
         wordStats.setAnswerTime(LocalDateTime.now());
         word.addWordStats(wordStats);
 
@@ -380,29 +378,32 @@ class RepeatingService implements RepeatingFacade {
                 : WordMethod.ANSWER_TO_QUESTION;
     }
 
-    private boolean checkAnswers(final Word word, final Map<String, String> userAnswers) {
-        final Map<String, String> correctAnswers = word.getWordParts().stream()
-                .filter(WordPart::getAnswer)
-                .collect(Collectors.toMap(
-                        wp -> String.valueOf(wp.getPosition()),
-                        WordPart::getWord
-                ));
+    private boolean checkAnswers(final Word word, final CheckAnswerForm form) {
+        final boolean shouldCheckAnswerParts = form.method() == WordMethod.QUESTION_TO_ANSWER;
+
+        final List<String> correctAnswers = word.getWordParts().stream()
+                .filter(wp -> wp.getAnswer() == shouldCheckAnswerParts)
+                .map(WordPart::getWord)
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .sorted()
+                .toList();
+
+        if (correctAnswers.isEmpty()) {
+            return false;
+        }
+
+        final List<String> userAnswers = form.answers().values().stream()
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .sorted()
+                .toList();
 
         if (userAnswers.size() != correctAnswers.size()) {
             return false;
         }
 
-        for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
-            final String userAnswer = userAnswers.get(entry.getKey());
-            if (userAnswer == null) {
-                return false;
-            }
-            if (!userAnswer.trim().equalsIgnoreCase(entry.getValue().trim())) {
-                return false;
-            }
-        }
-
-        return true;
+        return userAnswers.equals(correctAnswers);
     }
 
     private LocalDateTime calculateResetTime(final int repetitionCount) {
@@ -410,13 +411,5 @@ class RepeatingService implements RepeatingFacade {
         final int index = Math.min(repetitionCount - 1, intervals.length - 1);
         final int days = intervals[Math.max(0, index)];
         return LocalDateTime.now().plusDays(days);
-    }
-
-    private WordMethod convertRepeatMethodToWordMethod(final CategoryMethod repeatMethod) {
-        return switch (repeatMethod) {
-            case QUESTION_TO_ANSWER -> WordMethod.QUESTION_TO_ANSWER;
-            case ANSWER_TO_QUESTION -> WordMethod.ANSWER_TO_QUESTION;
-            case BOTH -> new Random().nextBoolean() ? WordMethod.QUESTION_TO_ANSWER : WordMethod.ANSWER_TO_QUESTION;
-        };
     }
 }
