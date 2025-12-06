@@ -1,5 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "words")
@@ -89,6 +91,20 @@ class Word extends AbstractUuidEntity {
 
     public void removeCategory(final Category category) {
         categories.remove(category);
+    }
+
+    public CategoryMethod getCategoryMethod() {
+        final Set<CategoryMethod> methods = categories.stream()
+                .map(Category::getMethod)
+                .collect(Collectors.toSet());
+
+        if (methods.size() == 1) {
+            return methods.iterator().next();
+        }
+
+        return methods.contains(CategoryMethod.QUESTION_TO_ANSWER)
+                ? CategoryMethod.QUESTION_TO_ANSWER
+                : CategoryMethod.ANSWER_TO_QUESTION;
     }
 }
 
