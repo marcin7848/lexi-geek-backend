@@ -90,8 +90,7 @@ class RepeatingService implements RepeatingFacade {
         }
 
         final Word word = session.getWordQueue().getFirst();
-        final Set<Category> categories = word.getCategories();
-        final CategoryMethod categoryMethod = determineCategoryMethod(categories);
+        final CategoryMethod categoryMethod = word.getCategoryMethod();
 
         final WordMethod wordMethod = determineWordMethod(categoryMethod, session.getMethod());
 
@@ -219,20 +218,6 @@ class RepeatingService implements RepeatingFacade {
         return categoryMethod == CategoryMethod.QUESTION_TO_ANSWER
                 ? WordMethod.QUESTION_TO_ANSWER
                 : WordMethod.ANSWER_TO_QUESTION;
-    }
-
-    private CategoryMethod determineCategoryMethod(final Set<Category> categories) {
-        final Set<CategoryMethod> methods = categories.stream()
-                .map(Category::getMethod)
-                .collect(Collectors.toSet());
-
-        if (methods.size() == 1) {
-            return methods.iterator().next();
-        }
-
-        return methods.contains(CategoryMethod.QUESTION_TO_ANSWER)
-                ? CategoryMethod.QUESTION_TO_ANSWER
-                : CategoryMethod.ANSWER_TO_QUESTION;
     }
 
     private boolean checkAnswers(final Word word, final Map<String, String> userAnswers) {
