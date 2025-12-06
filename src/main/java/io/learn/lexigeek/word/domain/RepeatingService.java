@@ -86,7 +86,7 @@ class RepeatingService implements RepeatingFacade {
 
         final int wordsLeft = calculateWordsLeftInSession(session);
 
-        return  RepeatMapper.sessionToDto(session, wordsLeft);
+        return RepeatMapper.sessionToDto(session, wordsLeft);
     }
 
     private int calculateWordsLeftInSession(final RepeatSession session) {
@@ -144,9 +144,8 @@ class RepeatingService implements RepeatingFacade {
         }
 
         final Word word = session.getWordQueue().getFirst();
-        final CategoryMethod categoryMethod = word.getCategoryMethod();
 
-        final WordMethod wordMethod = determineWordMethod(categoryMethod, session.getMethod());
+        final WordMethod wordMethod = determineWordMethod(word, session.getMethod());
 
         final CategoryMode categoryMode = word.getCategories().stream()
                 .findFirst()
@@ -354,11 +353,32 @@ class RepeatingService implements RepeatingFacade {
         return 1;
     }
 
-    private WordMethod determineWordMethod(final CategoryMethod categoryMethod, final CategoryMethod sessionMethod) {
-        if (categoryMethod == CategoryMethod.BOTH && sessionMethod == CategoryMethod.BOTH) {
-            return new Random().nextBoolean() ? WordMethod.QUESTION_TO_ANSWER : WordMethod.ANSWER_TO_QUESTION;
+    private WordMethod determineWordMethod(final Word word, final CategoryMethod sessionMethod) {
+        final CategoryMethod categoryMethod = word.getCategoryMethod();
+        final LocalDateTime resetTime = word.getResetTime();
+
+        final List<WordStats> correctStatsAfterReset = word.getWordStats().stream()
+                .filter(stat -> stat.getCorrect() && stat.getAnswerTime().isAfter(resetTime))
+                .toList();
+
+        if (sessionMethod == CategoryMethod.BOTH && categoryMethod == CategoryMethod.BOTH) {
+            if (correctStatsAfterReset.isEmpty()) {
+                return new Random().nextBoolean() ? WordMethod.QUESTION_TO_ANSWER : WordMethod.ANSWER_TO_QUESTION;
+            } else {
+                final WordMethod completedMethod = correctStatsAfterReset.getFirst().getMethod();
+                return completedMethod == WordMethod.QUESTION_TO_ANSWER
+                        ? WordMethod.ANSWER_TO_QUESTION
+                        : WordMethod.QUESTION_TO_ANSWER;
+            }
         }
-        return categoryMethod == CategoryMethod.QUESTION_TO_ANSWER
+
+        if (sessionMethod == CategoryMethod.BOTH) {
+            return categoryMethod == CategoryMethod.QUESTION_TO_ANSWER
+                    ? WordMethod.QUESTION_TO_ANSWER
+                    : WordMethod.ANSWER_TO_QUESTION;
+        }
+
+        return sessionMethod == CategoryMethod.QUESTION_TO_ANSWER
                 ? WordMethod.QUESTION_TO_ANSWER
                 : WordMethod.ANSWER_TO_QUESTION;
     }
