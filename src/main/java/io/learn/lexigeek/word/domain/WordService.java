@@ -74,19 +74,14 @@ class WordService implements WordFacade {
             return (o1, o2) -> 0;
         }
 
-        Comparator<WordDto> comparator = switch (sortOrder.getField()) {
+        // Return ASC comparator - PageableUtils.sort() will handle reversing for DESC
+        return switch (sortOrder.getField()) {
             case "lastTimeRepeated" -> Comparator.comparing(WordDto::lastTimeRepeated,
                     Comparator.nullsLast(Comparator.naturalOrder()));
             case "repeated" -> Comparator.comparing(WordDto::repeated,
                     Comparator.nullsLast(Comparator.naturalOrder()));
             default -> (o1, o2) -> 0;
         };
-
-        if (sortOrder.getDirection() == Sort.Direction.DESC) {
-            comparator = comparator.reversed();
-        }
-
-        return comparator;
     }
 
     @Override
