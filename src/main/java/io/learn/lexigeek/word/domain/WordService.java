@@ -21,9 +21,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -47,42 +48,30 @@ class WordService implements WordFacade {
 
         final WordSpecification specification = new WordSpecification(form, categoryUuid);
 
-        // Check if sorting by computed fields (lastTimeRepeated or repeated)
-        final boolean sortByComputedField = pageableRequest.getSortBy().stream()
-                .anyMatch(sort -> "lastTimeRepeated".equals(sort.getField()) || "repeated".equals(sort.getField()));
+
+        final String sortField = pageableRequest.getFirstSort().getField();
+        final boolean sortByComputedField = "lastTimeRepeated".equals(sortField) || "repeated".equals(sortField);
 
         if (sortByComputedField) {
-            // Load all words without pagination, compute fields, then sort and paginate in memory
             final List<Word> allWords = wordRepository.findAll(specification);
             final List<WordDto> wordDtos = allWords.stream()
                     .map(WordMapper::entityToDto)
                     .toList();
 
-            final Comparator<WordDto> comparator = getWordDtoComparator(pageableRequest);
-            final long total = wordDtos.size();
+            final Map<String, Comparator<WordDto>> customComparators = Map.of(
+                    "lastTimeRepeated", Comparator.comparing(WordDto::lastTimeRepeated,
+                            Comparator.nullsLast(Comparator.naturalOrder())),
+                    "repeated", Comparator.comparing(WordDto::repeated,
+                            Comparator.nullsLast(Comparator.naturalOrder()))
+            );
 
-            return PageableUtils.listToPageDto(wordDtos, pageableRequest, total, comparator);
+            return PageableUtils.listToPageDto(wordDtos, pageableRequest, customComparators);
         }
 
         return PageableUtils.toDto(wordRepository.findAll(specification, PageableUtils.createPageable(pageableRequest))
                 .map(WordMapper::entityToDto), pageableRequest);
     }
 
-    private Comparator<WordDto> getWordDtoComparator(final PageableRequest pageableRequest) {
-        final SortOrder sortOrder = pageableRequest.getFirstSort();
-        if (sortOrder == null || sortOrder.getField() == null) {
-            return (o1, o2) -> 0;
-        }
-
-        // Return ASC comparator - PageableUtils.sort() will handle reversing for DESC
-        return switch (sortOrder.getField()) {
-            case "lastTimeRepeated" -> Comparator.comparing(WordDto::lastTimeRepeated,
-                    Comparator.nullsLast(Comparator.naturalOrder()));
-            case "repeated" -> Comparator.comparing(WordDto::repeated,
-                    Comparator.nullsLast(Comparator.naturalOrder()));
-            default -> (o1, o2) -> 0;
-        };
-    }
 
     @Override
     public WordDto getWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {

@@ -82,6 +82,13 @@ public class PageableUtils {
         return toDto(page, pageableRequest);
     }
 
+    public <T> PageDto<T> listToPageDto(final List<T> list,
+                                        final PageableRequest pageableRequest,
+                                        final Map<String, Comparator<T>> customComparators) {
+        final Comparator<T> comparator = buildComparatorWithCustomFields(pageableRequest, customComparators);
+        return listToPageDto(list, pageableRequest, list.size(), comparator);
+    }
+
     public <T> PageDto<T> pagedListToPageDto(final List<T> list, final PageableRequest pageableRequest, final long total) {
         final Pageable pageable = getPageable(pageableRequest);
         final Page<T> page = new PageImpl<>(list, pageable, total);
@@ -168,5 +175,21 @@ public class PageableUtils {
         }
 
         return modifiableList;
+    }
+
+    private static <T> Comparator<T> buildComparatorWithCustomFields(final PageableRequest pageableRequest,
+                                                                      final Map<String, Comparator<T>> customComparators) {
+        final SortOrder sortOrder = pageableRequest.getFirstSort();
+        if (sortOrder == null || sortOrder.getField() == null) {
+            return (o1, o2) -> 0;
+        }
+
+        final String fieldName = sortOrder.getField();
+
+        if (customComparators != null && customComparators.containsKey(fieldName)) {
+            return customComparators.get(fieldName);
+        }
+
+        return (o1, o2) -> 0;
     }
 }
