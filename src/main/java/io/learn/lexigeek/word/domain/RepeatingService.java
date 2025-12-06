@@ -176,11 +176,75 @@ class RepeatingService implements RepeatingFacade {
         final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
+        //TODO: resetTime set to now for all words in session left (przemyslec)
         repeatSessionRepository.delete(session);
     }
 
     private List<Word> prioritizeWords(final List<Word> words, final Boolean includeChosen) {
+        final List<Word> result = new ArrayList<>();
+        final List<Word> chosenWords = new ArrayList<>();
+        final List<Word> priorityWords = new ArrayList<>();
+        final List<Word> normalWords = new ArrayList<>();
 
+        for (final Word word : words) {
+            if (includeChosen && word.getChosen()) {
+                chosenWords.add(word);
+            } else if (hasRecentIncorrectAttempts(word)) {
+                priorityWords.add(word);
+            } else {
+                normalWords.add(word);
+            }
+        }
+
+        if (includeChosen && !chosenWords.isEmpty()) {
+            Collections.shuffle(chosenWords);
+            result.addAll(chosenWords);
+        }
+
+        if (!priorityWords.isEmpty()) {
+            priorityWords.sort((w1, w2) -> {
+                final int count1 = countRecentIncorrectAttempts(w1);
+                final int count2 = countRecentIncorrectAttempts(w2);
+                return Integer.compare(count2, count1);
+            });
+
+            result.addAll(priorityWords);
+        }
+
+        if (!normalWords.isEmpty()) {
+            Collections.shuffle(normalWords);
+            result.addAll(normalWords);
+        }
+
+        return result;
+    }
+
+    private boolean hasRecentIncorrectAttempts(final Word word) {
+        if (word.getWordStats().isEmpty()) {
+            return false;
+        }
+
+        final LocalDateTime resetTime = word.getResetTime();
+        final LocalDateTime threeHoursBeforeReset = resetTime.minusHours(3);
+
+        return word.getWordStats().stream()
+                .anyMatch(stat -> !stat.getCorrect()
+                        && stat.getAnswerTime().isAfter(threeHoursBeforeReset));
+    }
+
+    private int countRecentIncorrectAttempts(final Word word) {
+        if (word.getResetTime() == null || word.getWordStats().isEmpty()) {
+            return 0;
+        }
+
+        final LocalDateTime resetTime = word.getResetTime();
+        final LocalDateTime threeHoursBeforeReset = resetTime.minusHours(3);
+
+        return (int) word.getWordStats().stream()
+                .filter(stat -> !stat.getCorrect()
+                        && stat.getAnswerTime().isBefore(resetTime)
+                        && stat.getAnswerTime().isAfter(threeHoursBeforeReset))
+                .count();
     }
 
     private List<Category> filterCategoriesByMethod(final List<Category> categories, final CategoryMethod sessionMethod) {
@@ -215,14 +279,14 @@ class RepeatingService implements RepeatingFacade {
         }
 
         final LocalDateTime resetTime = word.getResetTime();
-        return resetTime != null && lastAnswerTime.isAfter(resetTime);
+        return lastAnswerTime.isAfter(resetTime);
     }
 
     private List<Word> selectWordsByCount(final List<Word> words, final int requestedCount, final CategoryMethod formMethod) {
         final List<Word> selectedWords = new ArrayList<>();
         int effectiveCount = 0;
 
-        for (Word word : words) {
+        for (final Word word : words) {
             final int wordSlots = calculateWordSlots(word, formMethod);
 
             if (effectiveCount + wordSlots <= requestedCount) {
