@@ -45,6 +45,8 @@ class RepeatingService implements RepeatingFacade {
         }
 
         final Set<UUID> categoryUuidSet = new HashSet<>(form.categoryUuids());
+
+        //here
         List<Word> words = wordRepository.findByCategoryUuids(categoryUuidSet);
 
         words = prioritizeWords(words);
@@ -53,6 +55,7 @@ class RepeatingService implements RepeatingFacade {
         words = words.subList(0, wordCount);
 
         Collections.shuffle(words);
+        //to here
 
         final RepeatSession session = new RepeatSession();
         session.setLanguage(language);
