@@ -49,6 +49,7 @@ class Word extends AbstractUuidEntity {
     @Column(name = "reset_time")
     private LocalDateTime resetTime;
 
+
     @OneToMany(mappedBy = "wordEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordPart> wordParts = new ArrayList<>();
 

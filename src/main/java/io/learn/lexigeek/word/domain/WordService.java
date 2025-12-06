@@ -77,10 +77,7 @@ class WordService implements WordFacade {
     public WordDto getWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Category category = categoryRepository.findByUuid(categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-
-        final Word word = wordRepository.findByUuidAndCategories(wordUuid, Set.of(category))
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         return WordMapper.entityToDto(word);
@@ -132,10 +129,7 @@ class WordService implements WordFacade {
                               final UUID wordUuid, final WordForm form) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Category category = categoryRepository.findByUuid(categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-
-        final Word word = wordRepository.findByUuidAndCategories(wordUuid, Set.of(category))
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         WordMapper.updateEntityFromForm(word, form);
@@ -149,10 +143,7 @@ class WordService implements WordFacade {
     public void deleteWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Category category = categoryRepository.findByUuid(categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-
-        final Word word = wordRepository.findByUuidAndCategories(wordUuid, Set.of(category))
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         wordRepository.delete(word);
@@ -162,10 +153,7 @@ class WordService implements WordFacade {
     public WordDto acceptWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Category category = categoryRepository.findByUuid(categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-
-        final Word word = wordRepository.findByUuidAndCategories(wordUuid, Set.of(category))
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         word.setAccepted(true);
@@ -177,10 +165,7 @@ class WordService implements WordFacade {
     public WordDto chooseWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Category category = categoryRepository.findByUuid(categoryUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
-
-        final Word word = wordRepository.findByUuidAndCategories(wordUuid, Set.of(category))
+        final Word word = wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_FOUND, wordUuid));
 
         word.setChosen(!word.getChosen());
