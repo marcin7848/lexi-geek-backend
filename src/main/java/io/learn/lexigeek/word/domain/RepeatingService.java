@@ -171,7 +171,8 @@ class RepeatingService implements RepeatingFacade {
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid));
 
-        final boolean correct = checkAnswers(word, form);
+        final CheckAnswerResult answerResult = checkAnswers(word, form);
+        final boolean correct = answerResult.correct();
 
         final WordStats wordStats = new WordStats();
         wordStats.setCorrect(correct);
@@ -184,30 +185,25 @@ class RepeatingService implements RepeatingFacade {
             final int repetitionCount = word.getWordStats().size();
             final LocalDateTime resetTime = calculateResetTime(repetitionCount);
             word.setResetTime(resetTime);
-        } else {
-            // Reset for review
-            word.setResetTime(LocalDateTime.now().plusDays(1));
+
+            // Remove word from queue
+            final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
+            updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
+            session.setWordQueue(updatedQueue);
         }
 
         wordRepository.save(word);
 
-        // Remove word from queue
-        final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
-        updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
-        session.setWordQueue(updatedQueue);
-
-        // Calculate remaining words based on the new logic
         final int wordsLeft = calculateWordsLeftInSession(session);
         final boolean sessionActive = wordsLeft > 0;
 
         if (sessionActive) {
             repeatSessionRepository.save(session);
         } else {
-            // Delete session when no words left
             repeatSessionRepository.delete(session);
         }
 
-        return new CheckAnswerResultDto(correct, wordsLeft, sessionActive);
+        return new CheckAnswerResultDto(correct, wordsLeft, sessionActive, answerResult.answerDetails());
     }
 
     @Override
@@ -218,7 +214,11 @@ class RepeatingService implements RepeatingFacade {
         final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
-        //TODO: resetTime set to now for all words in session left (przemyslec)
+        session.getWordQueue().forEach(word -> {
+            word.setResetTime(LocalDateTime.now());
+        });
+
+        wordRepository.saveAll(session.getWordQueue());
         repeatSessionRepository.delete(session);
     }
 
@@ -378,32 +378,77 @@ class RepeatingService implements RepeatingFacade {
                 : WordMethod.ANSWER_TO_QUESTION;
     }
 
-    private boolean checkAnswers(final Word word, final CheckAnswerForm form) {
+    private CheckAnswerResult checkAnswers(final Word word, final CheckAnswerForm form) {
         final boolean shouldCheckAnswerParts = form.method() == WordMethod.QUESTION_TO_ANSWER;
 
         final List<String> correctAnswers = word.getWordParts().stream()
                 .filter(wp -> wp.getAnswer() == shouldCheckAnswerParts)
                 .map(WordPart::getWord)
                 .map(String::trim)
-                .map(String::toLowerCase)
-                .sorted()
                 .toList();
 
         if (correctAnswers.isEmpty()) {
-            return false;
+            return new CheckAnswerResult(false, List.of());
         }
 
         final List<String> userAnswers = form.answers().values().stream()
                 .map(String::trim)
+                .toList();
+
+        final List<String> normalizedCorrect = correctAnswers.stream()
                 .map(String::toLowerCase)
                 .sorted()
                 .toList();
 
-        if (userAnswers.size() != correctAnswers.size()) {
-            return false;
+        final List<String> normalizedUser = userAnswers.stream()
+                .map(String::toLowerCase)
+                .sorted()
+                .toList();
+
+        final boolean allCorrect = normalizedUser.equals(normalizedCorrect);
+
+        final List<CheckAnswerResultDto.AnswerDetail> answerDetails = new ArrayList<>();
+
+        final List<String> unmatchedCorrect = new ArrayList<>(correctAnswers.stream()
+                .map(String::toLowerCase)
+                .toList());
+
+        for (final String userAnswer : userAnswers) {
+            final String normalizedUserAnswer = userAnswer.toLowerCase();
+            final boolean isCorrect = unmatchedCorrect.remove(normalizedUserAnswer);
+
+            String matchedCorrectAnswer = null;
+            if (isCorrect) {
+                matchedCorrectAnswer = correctAnswers.stream()
+                        .filter(ca -> ca.toLowerCase().equals(normalizedUserAnswer))
+                        .findFirst()
+                        .orElse(normalizedUserAnswer);
+            }
+
+            answerDetails.add(new CheckAnswerResultDto.AnswerDetail(
+                    userAnswer,
+                    matchedCorrectAnswer,
+                    isCorrect
+            ));
         }
 
-        return userAnswers.equals(correctAnswers);
+        for (final String missedAnswer : unmatchedCorrect) {
+            final String originalAnswer = correctAnswers.stream()
+                    .filter(ca -> ca.toLowerCase().equals(missedAnswer))
+                    .findFirst()
+                    .orElse(missedAnswer);
+
+            answerDetails.add(new CheckAnswerResultDto.AnswerDetail(
+                    null,
+                    originalAnswer,
+                    false
+            ));
+        }
+
+        return new CheckAnswerResult(allCorrect, answerDetails);
+    }
+
+    private record CheckAnswerResult(boolean correct, List<CheckAnswerResultDto.AnswerDetail> answerDetails) {
     }
 
     private LocalDateTime calculateResetTime(final int repetitionCount) {
