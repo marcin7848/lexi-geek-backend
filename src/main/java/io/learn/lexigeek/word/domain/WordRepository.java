@@ -17,16 +17,6 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
     Optional<Word> findByUuidAndCategories(final UUID uuid, final Set<Category> category);
 
     @Query("""
-            SELECT w FROM Word w
-                        LEFT JOIN FETCH w.wordParts wp
-                        LEFT JOIN FETCH w.categories c
-                        WHERE w.uuid = :uuid
-                        AND EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid = :categoryUuid)
-            """)
-    Optional<Word> findByUuidAndCategoryUuid(@Param("uuid") final UUID uuid,
-                                             @Param("categoryUuid") final UUID categoryUuid);
-
-    @Query("""
             SELECT DISTINCT w FROM Word w
                        LEFT JOIN FETCH w.wordParts wp
                        LEFT JOIN FETCH w.categories c

@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record StartRepeatSessionForm(@NotEmpty List<UUID> categoryUuids,
-                                     @NotNull
-                                     @Min(value = 1) Integer wordCount,
+                                     @NotNull @Min(value = 1) Integer wordCount,
                                      @NotNull RepeatMethod method,
                                      @NotNull Boolean includeChosen) {
 }
