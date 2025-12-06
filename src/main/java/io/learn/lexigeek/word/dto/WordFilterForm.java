@@ -8,6 +8,5 @@ public record WordFilterForm(UUID uuid,
                              Boolean accepted,
                              Boolean chosen,
                              String searchText,
-                             WordMechanism mechanism,
-                             Boolean toRepeat) {
+                             WordMechanism mechanism) {
 }

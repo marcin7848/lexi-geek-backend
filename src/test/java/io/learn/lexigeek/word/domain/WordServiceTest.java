@@ -77,7 +77,7 @@ class WordServiceTest {
             when(wordRepository.findAll(any(WordSpecification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(Collections.singletonList(word), PageRequest.of(0, 10), 1));
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When
@@ -105,7 +105,7 @@ class WordServiceTest {
             when(wordRepository.findAll(any(WordSpecification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0));
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When
@@ -124,7 +124,7 @@ class WordServiceTest {
             doThrow(new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid))
                     .when(categoryFacade).verifyCategoryAccess(languageUuid, categoryUuid);
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When & Then

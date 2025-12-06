@@ -45,7 +45,6 @@ class WordSpecification implements Specification<Word> {
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.accepted), form.accepted());
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.chosen), form.chosen());
         addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.mechanism), form.mechanism());
-        addEqualPredicate(criteriaBuilder, predicates, root, r -> r.get(Word.Fields.toRepeat), form.toRepeat());
 
         if (form.searchText() != null && !form.searchText().isBlank()) {
             final String searchPattern = "%" + form.searchText().toLowerCase() + "%";
