@@ -261,7 +261,7 @@ class WordServiceTest {
             categoriesPage.setPageSize(10);
             categoriesPage.setTotal(2);
             when(categoryFacade.getCategories(any(), any(), any())).thenReturn(categoriesPage);
-            when(wordRepository.findByCategoryUuidsWithDetails(anySet())).thenReturn(Collections.emptyList());
+            when(wordRepository.findByCategoryUuids(anySet())).thenReturn(Collections.emptyList());
 
             final Word savedWord = new Word();
             savedWord.setUuid(UUID.randomUUID());
@@ -272,7 +272,7 @@ class WordServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(wordRepository).findByCategoryUuidsWithDetails(anySet());
+            verify(wordRepository).findByCategoryUuids(anySet());
 
             final ArgumentCaptor<Word> captor = ArgumentCaptor.forClass(Word.class);
             verify(wordRepository).save(captor.capture());
@@ -306,7 +306,7 @@ class WordServiceTest {
             categoriesPage.setPageSize(10);
             categoriesPage.setTotal(1);
             when(categoryFacade.getCategories(any(), any(), any())).thenReturn(categoriesPage);
-            when(wordRepository.findByCategoryUuidsWithDetails(anySet())).thenReturn(List.of(existingWord));
+            when(wordRepository.findByCategoryUuids(anySet())).thenReturn(List.of(existingWord));
             when(wordRepository.save(any(Word.class))).thenReturn(existingWord);
 
             // When
@@ -314,7 +314,7 @@ class WordServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(wordRepository).findByCategoryUuidsWithDetails(anySet());
+            verify(wordRepository).findByCategoryUuids(anySet());
 
             final ArgumentCaptor<Word> captor = ArgumentCaptor.forClass(Word.class);
             verify(wordRepository).save(captor.capture());

@@ -32,7 +32,7 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
                        LEFT JOIN FETCH w.categories c
                        WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid IN :categoryUuids)
             """)
-    List<Word> findByCategoryUuidsWithDetails(@Param("categoryUuids") final Set<UUID> categoryUuids);
+    List<Word> findByCategoryUuids(@Param("categoryUuids") final Set<UUID> categoryUuids);
 
     @Query("""
             SELECT w FROM Word w

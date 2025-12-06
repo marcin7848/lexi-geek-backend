@@ -101,7 +101,7 @@ class WordService implements WordFacade {
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
-            final List<Word> existingWords = wordRepository.findByCategoryUuidsWithDetails(categories);
+            final List<Word> existingWords = wordRepository.findByCategoryUuids(categories);
 
             final Word matchingWord = findWordWithMatchingParts(existingWords, word);
 
