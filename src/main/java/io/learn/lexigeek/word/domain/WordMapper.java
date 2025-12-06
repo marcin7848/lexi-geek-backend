@@ -1,10 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
-import io.learn.lexigeek.word.dto.WordDto;
-import io.learn.lexigeek.word.dto.WordForm;
-import io.learn.lexigeek.word.dto.WordPartDto;
-import io.learn.lexigeek.word.dto.WordPartForm;
-import io.learn.lexigeek.word.dto.WordStatsDto;
+import io.learn.lexigeek.word.dto.*;
 import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
@@ -103,4 +99,3 @@ class WordMapper {
         );
     }
 }
-

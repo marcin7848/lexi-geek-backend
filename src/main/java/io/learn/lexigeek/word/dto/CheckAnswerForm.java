@@ -4,9 +4,5 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.Map;
 
-public record CheckAnswerForm(
-        @NotNull(message = "Answers are required")
-        Map<String, String> answers
-) {
+public record CheckAnswerForm(@NotNull Map<String, String> answers) {
 }
-

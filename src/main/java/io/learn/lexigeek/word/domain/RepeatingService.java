@@ -87,10 +87,11 @@ class RepeatingService implements RepeatingFacade {
             throw new NotFoundException(ErrorCodes.NO_MORE_WORDS_IN_SESSION);
         }
 
-        final Word word = session.getWordQueue().get(0);
+        final Word word = session.getWordQueue().getFirst();
+        final Set<Category> categories = word.getCategories();
+        final CategoryMethod categoryMethod = determineCategoryMethod(categories);
 
-        // Determine method for this word
-        final WordMethod wordMethod = determineWordMethod(session.getMethod());
+        final WordMethod wordMethod = determineWordMethod(categoryMethod, session.getMethod());
 
         // Get category mode (use first category's mode)
         final CategoryMode categoryMode = word.getCategories().stream()
@@ -209,14 +210,27 @@ class RepeatingService implements RepeatingFacade {
                 .collect(Collectors.toList());
     }
 
-    private WordMethod determineWordMethod(final CategoryMethod sessionMethod) {
-        if (sessionMethod == CategoryMethod.BOTH) {
-            // Random 50/50
+    private WordMethod determineWordMethod(final CategoryMethod categoryMethod, final CategoryMethod sessionMethod) {
+        if (categoryMethod == CategoryMethod.BOTH && sessionMethod == CategoryMethod.BOTH) {
             return new Random().nextBoolean() ? WordMethod.QUESTION_TO_ANSWER : WordMethod.ANSWER_TO_QUESTION;
         }
-        return sessionMethod == CategoryMethod.QUESTION_TO_ANSWER
+        return categoryMethod == CategoryMethod.QUESTION_TO_ANSWER
                 ? WordMethod.QUESTION_TO_ANSWER
                 : WordMethod.ANSWER_TO_QUESTION;
+    }
+
+    private CategoryMethod determineCategoryMethod(final Set<Category> categories) {
+        final Set<CategoryMethod> methods = categories.stream()
+                .map(Category::getMethod)
+                .collect(Collectors.toSet());
+
+        if (methods.size() == 1) {
+            return methods.iterator().next();
+        }
+
+        return methods.contains(CategoryMethod.QUESTION_TO_ANSWER)
+                ? CategoryMethod.QUESTION_TO_ANSWER
+                : CategoryMethod.ANSWER_TO_QUESTION;
     }
 
     private boolean checkAnswers(final Word word, final Map<String, String> userAnswers) {
