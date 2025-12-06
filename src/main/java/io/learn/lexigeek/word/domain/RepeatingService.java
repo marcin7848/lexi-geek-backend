@@ -44,9 +44,8 @@ class RepeatingService implements RepeatingFacade {
             throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
         }
 
-        final Set<UUID> categoryUuidSet = new HashSet<>(form.categoryUuids());
-
         //here
+        final Set<UUID> categoryUuidSet = new HashSet<>(form.categoryUuids());
         List<Word> words = wordRepository.findByCategoryUuids(categoryUuidSet);
 
         words = prioritizeWords(words);
