@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 class RepeatMapper {
 
-    static RepeatSessionDto sessionToDto(final RepeatSession session) {
+    static RepeatSessionDto sessionToDto(final RepeatSession session, final int wordsLeft) {
         return new RepeatSessionDto(
                 session.getUuid(),
                 session.getLanguage().getUuid(),
-                session.getWordQueue().size(),
+                wordsLeft,
                 session.getMethod(),
                 session.getCreated()
         );

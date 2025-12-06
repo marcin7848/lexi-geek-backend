@@ -73,7 +73,7 @@ class RepeatingService implements RepeatingFacade {
 
         final RepeatSession savedSession = repeatSessionRepository.save(session);
 
-        return RepeatMapper.sessionToDto(savedSession);
+        return RepeatMapper.sessionToDto(savedSession, calculateWordsLeftInSession(savedSession));
     }
 
     @Override
@@ -84,7 +84,51 @@ class RepeatingService implements RepeatingFacade {
         final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
-        return RepeatMapper.sessionToDto(session);
+        final int wordsLeft = calculateWordsLeftInSession(session);
+
+        return  RepeatMapper.sessionToDto(session, wordsLeft);
+    }
+
+    private int calculateWordsLeftInSession(final RepeatSession session) {
+        int totalWordsLeft = 0;
+
+        for (final Word word : session.getWordQueue()) {
+            totalWordsLeft += calculateWordSlotsRemaining(word, session.getMethod());
+        }
+
+        return totalWordsLeft;
+    }
+
+    private int calculateWordSlotsRemaining(final Word word, final CategoryMethod sessionMethod) {
+        final LocalDateTime resetTime = word.getResetTime();
+
+        final long correctStatsAfterReset = word.getWordStats().stream()
+                .filter(stat -> stat.getCorrect() && stat.getAnswerTime().isAfter(resetTime))
+                .count();
+
+        if (sessionMethod == CategoryMethod.BOTH && word.getCategoryMethod() == CategoryMethod.BOTH) {
+            if (correctStatsAfterReset == 0) {
+                return 2;
+            } else if (correctStatsAfterReset == 1) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        if (sessionMethod == CategoryMethod.BOTH && word.getCategoryMethod() != CategoryMethod.BOTH) {
+            if (correctStatsAfterReset == 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        if (correctStatsAfterReset == 0) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -104,7 +148,6 @@ class RepeatingService implements RepeatingFacade {
 
         final WordMethod wordMethod = determineWordMethod(categoryMethod, session.getMethod());
 
-        // Get category mode (use first category's mode)
         final CategoryMode categoryMode = word.getCategories().stream()
                 .findFirst()
                 .map(Category::getMode)
@@ -155,8 +198,9 @@ class RepeatingService implements RepeatingFacade {
         updatedQueue.remove(0);
         session.setWordQueue(updatedQueue);
 
-        final int wordsLeft = updatedQueue.size();
-        final boolean sessionActive = !updatedQueue.isEmpty();
+        // Calculate remaining words based on the new logic
+        final int wordsLeft = calculateWordsLeftInSession(session);
+        final boolean sessionActive = wordsLeft > 0;
 
         if (sessionActive) {
             repeatSessionRepository.save(session);
@@ -265,7 +309,7 @@ class RepeatingService implements RepeatingFacade {
             return false;
         }
 
-        if(word.getChosen() && includeChosen){
+        if (word.getChosen() && includeChosen) {
             return false;
         }
 
