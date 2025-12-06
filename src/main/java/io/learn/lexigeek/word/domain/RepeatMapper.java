@@ -31,7 +31,6 @@ class RepeatMapper {
                 .collect(Collectors.toList());
 
         return new RepeatWordDto(
-                null, // No attempt UUID needed
                 word.getUuid(),
                 word.getComment(),
                 word.getMechanism(),

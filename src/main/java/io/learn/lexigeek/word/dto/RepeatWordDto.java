@@ -9,12 +9,9 @@ import java.util.UUID;
 
 public record RepeatWordDto(
         UUID uuid,
-        UUID wordUuid,
         String comment,
         WordMechanism mechanism,
         List<WordPartDto> wordParts,
         WordMethod method,
-        CategoryMode categoryMode
-) {
+        CategoryMode categoryMode) {
 }
-
