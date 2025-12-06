@@ -143,7 +143,9 @@ class RepeatingService implements RepeatingFacade {
             throw new NotFoundException(ErrorCodes.NO_MORE_WORDS_IN_SESSION);
         }
 
-        final Word word = session.getWordQueue().getFirst();
+        final List<Word> wordQueue = session.getWordQueue();
+        final int randomIndex = new Random().nextInt(wordQueue.size());
+        final Word word = wordQueue.get(randomIndex);
 
         final WordMethod wordMethod = determineWordMethod(word, session.getMethod());
 
@@ -164,11 +166,11 @@ class RepeatingService implements RepeatingFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
         // Verify word is in session queue
-        if (session.getWordQueue().isEmpty() || !session.getWordQueue().get(0).getUuid().equals(wordUuid)) {
-            throw new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid);
-        }
-
-        final Word word = session.getWordQueue().get(0);
+        final List<Word> wordQueue = session.getWordQueue();
+        final Word word = wordQueue.stream()
+                .filter(w -> w.getUuid().equals(wordUuid))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid));
 
         // Check answers
         final boolean correct = checkAnswers(word, form.answers());
@@ -194,7 +196,7 @@ class RepeatingService implements RepeatingFacade {
 
         // Remove word from queue
         final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
-        updatedQueue.remove(0);
+        updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
         session.setWordQueue(updatedQueue);
 
         // Calculate remaining words based on the new logic
