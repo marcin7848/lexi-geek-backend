@@ -44,17 +44,27 @@ class RepeatingService implements RepeatingFacade {
             throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
         }
 
-        //here
-        final Set<UUID> categoryUuidSet = new HashSet<>(form.categoryUuids());
-        List<Word> words = wordRepository.findByCategoryUuids(categoryUuidSet);
+        final List<Category> eligibleCategories = filterCategoriesByMethod(categories, form.method());
+        if (eligibleCategories.isEmpty()) {
+            throw new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND);
+        }
 
-        words = prioritizeWords(words);
+        final Set<UUID> eligibleCategoryUuids = eligibleCategories.stream()
+                .map(Category::getUuid)
+                .collect(Collectors.toSet());
 
-        final int wordCount = Math.min(form.wordCount(), words.size());
-        words = words.subList(0, wordCount);
+        List<Word> words = wordRepository.findByCategoryUuids(eligibleCategoryUuids);
+
+        words = words.stream()
+                .filter(Word::getAccepted)
+                .filter(word -> !isWordDone(word, form.includeChosen()))
+                .collect(Collectors.toList());
+
+        words = prioritizeWords(words, form.includeChosen());
+
+        words = selectWordsByCount(words, form.wordCount(), form.method());
 
         Collections.shuffle(words);
-        //to here
 
         final RepeatSession session = new RepeatSession();
         session.setLanguage(language);
@@ -169,46 +179,71 @@ class RepeatingService implements RepeatingFacade {
         repeatSessionRepository.delete(session);
     }
 
-    private List<Word> prioritizeWords(final List<Word> words) {
-        // Sort by priority: never repeated > words needing review > oldest lastTimeRepeated
-        return words.stream()
-                .sorted((w1, w2) -> {
-                    final int repeated1 = w1.getWordStats().size();
-                    final int repeated2 = w2.getWordStats().size();
+    private List<Word> prioritizeWords(final List<Word> words, final Boolean includeChosen) {
 
-                    // Priority 1: Never repeated (words with 0 stats)
-                    if (repeated1 == 0 && repeated2 > 0) return -1;
-                    if (repeated1 > 0 && repeated2 == 0) return 1;
+    }
 
-                    // If both never repeated, they're equal
-                    if (repeated1 == 0 && repeated2 == 0) return 0;
+    private List<Category> filterCategoriesByMethod(final List<Category> categories, final CategoryMethod sessionMethod) {
+        if (sessionMethod == CategoryMethod.BOTH) {
+            return categories;
+        }
 
-                    // At this point, both words have been repeated at least once
-                    final LocalDateTime lastRepeated1 = w1.getWordStats().stream()
-                            .map(WordStats::getAnswerTime)
-                            .max(LocalDateTime::compareTo)
-                            .orElse(null);
-                    final LocalDateTime lastRepeated2 = w2.getWordStats().stream()
-                            .map(WordStats::getAnswerTime)
-                            .max(LocalDateTime::compareTo)
-                            .orElse(null);
-
-                    // Priority 2: Words needing review (resetTime in the past or null)
-                    final LocalDateTime now = LocalDateTime.now();
-                    final boolean needsReview1 = w1.getResetTime() == null || w1.getResetTime().isBefore(now);
-                    final boolean needsReview2 = w2.getResetTime() == null || w2.getResetTime().isBefore(now);
-
-                    if (needsReview1 && !needsReview2) return -1;
-                    if (!needsReview1 && needsReview2) return 1;
-
-                    // Priority 3: Oldest last repeated
-                    if (lastRepeated1 != null && lastRepeated2 != null) {
-                        return lastRepeated1.compareTo(lastRepeated2);
-                    }
-
-                    return 0;
+        return categories.stream()
+                .filter(category -> {
+                    final CategoryMethod method = category.getMethod();
+                    return method == CategoryMethod.BOTH || method == sessionMethod;
                 })
                 .collect(Collectors.toList());
+    }
+
+    private boolean isWordDone(final Word word, final Boolean includeChosen) {
+        if (word.getWordStats().isEmpty()) {
+            return false;
+        }
+
+        if(word.getChosen() && includeChosen){
+            return false;
+        }
+
+        final LocalDateTime lastAnswerTime = word.getWordStats().stream()
+                .map(WordStats::getAnswerTime)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
+        if (lastAnswerTime == null) {
+            return false;
+        }
+
+        final LocalDateTime resetTime = word.getResetTime();
+        return resetTime != null && lastAnswerTime.isAfter(resetTime);
+    }
+
+    private List<Word> selectWordsByCount(final List<Word> words, final int requestedCount, final CategoryMethod formMethod) {
+        final List<Word> selectedWords = new ArrayList<>();
+        int effectiveCount = 0;
+
+        for (Word word : words) {
+            final int wordSlots = calculateWordSlots(word, formMethod);
+
+            if (effectiveCount + wordSlots <= requestedCount) {
+                selectedWords.add(word);
+                effectiveCount += wordSlots;
+            }
+
+            if (effectiveCount >= requestedCount) {
+                break;
+            }
+        }
+
+        return selectedWords;
+    }
+
+    private int calculateWordSlots(final Word word, final CategoryMethod formMethod) {
+        if (formMethod == CategoryMethod.BOTH && word.getCategoryMethod() == CategoryMethod.BOTH) {
+            return 2;
+        }
+
+        return 1;
     }
 
     private WordMethod determineWordMethod(final CategoryMethod categoryMethod, final CategoryMethod sessionMethod) {
@@ -221,7 +256,6 @@ class RepeatingService implements RepeatingFacade {
     }
 
     private boolean checkAnswers(final Word word, final Map<String, String> userAnswers) {
-        // Get all answer parts
         final Map<String, String> correctAnswers = word.getWordParts().stream()
                 .filter(WordPart::getAnswer)
                 .collect(Collectors.toMap(
@@ -229,12 +263,10 @@ class RepeatingService implements RepeatingFacade {
                         WordPart::getWord
                 ));
 
-        // Check if all positions are answered
         if (userAnswers.size() != correctAnswers.size()) {
             return false;
         }
 
-        // Check each answer (case-insensitive)
         for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
             final String userAnswer = userAnswers.get(entry.getKey());
             if (userAnswer == null) {
@@ -249,7 +281,6 @@ class RepeatingService implements RepeatingFacade {
     }
 
     private LocalDateTime calculateResetTime(final int repetitionCount) {
-        // Spaced repetition: 1 day, 3 days, 7 days, 14 days, 30 days, 60 days, etc.
         final int[] intervals = {1, 3, 7, 14, 30, 60, 90, 180, 365};
         final int index = Math.min(repetitionCount - 1, intervals.length - 1);
         final int days = intervals[Math.max(0, index)];
