@@ -1,5 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.category.domain.CategoryMode;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.NotFoundException;
@@ -89,7 +90,7 @@ class RepeatingService implements RepeatingFacade {
         final Word word = session.getWordQueue().get(0);
 
         // Determine method for this word
-        final RepeatWordMethod wordMethod = determineWordMethod(session.getMethod());
+        final WordMethod wordMethod = determineWordMethod(session.getMethod());
 
         // Get category mode (use first category's mode)
         final CategoryMode categoryMode = word.getCategories().stream()
@@ -208,14 +209,14 @@ class RepeatingService implements RepeatingFacade {
                 .collect(Collectors.toList());
     }
 
-    private RepeatWordMethod determineWordMethod(final RepeatMethod sessionMethod) {
-        if (sessionMethod == RepeatMethod.BOTH) {
+    private WordMethod determineWordMethod(final CategoryMethod sessionMethod) {
+        if (sessionMethod == CategoryMethod.BOTH) {
             // Random 50/50
-            return new Random().nextBoolean() ? RepeatWordMethod.QuestionToAnswer : RepeatWordMethod.AnswerToQuestion;
+            return new Random().nextBoolean() ? WordMethod.QUESTION_TO_ANSWER : WordMethod.ANSWER_TO_QUESTION;
         }
-        return sessionMethod == RepeatMethod.QUESTION_TO_ANSWER
-                ? RepeatWordMethod.QuestionToAnswer
-                : RepeatWordMethod.AnswerToQuestion;
+        return sessionMethod == CategoryMethod.QUESTION_TO_ANSWER
+                ? WordMethod.QUESTION_TO_ANSWER
+                : WordMethod.ANSWER_TO_QUESTION;
     }
 
     private boolean checkAnswers(final Word word, final Map<String, String> userAnswers) {
@@ -254,7 +255,7 @@ class RepeatingService implements RepeatingFacade {
         return LocalDateTime.now().plusDays(days);
     }
 
-    private WordMethod convertRepeatMethodToWordMethod(final RepeatMethod repeatMethod) {
+    private WordMethod convertRepeatMethodToWordMethod(final CategoryMethod repeatMethod) {
         return switch (repeatMethod) {
             case QUESTION_TO_ANSWER -> WordMethod.QUESTION_TO_ANSWER;
             case ANSWER_TO_QUESTION -> WordMethod.ANSWER_TO_QUESTION;
@@ -262,4 +263,3 @@ class RepeatingService implements RepeatingFacade {
         };
     }
 }
-

@@ -1,9 +1,9 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.category.domain.CategoryMode;
 import io.learn.lexigeek.word.dto.RepeatSessionDto;
 import io.learn.lexigeek.word.dto.RepeatWordDto;
-import io.learn.lexigeek.word.dto.RepeatWordMethod;
 import io.learn.lexigeek.word.dto.WordPartDto;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,7 @@ class RepeatMapper {
         );
     }
 
-    static RepeatWordDto wordToRepeatDto(final Word word, final RepeatWordMethod method, final CategoryMode categoryMode) {
+    static RepeatWordDto wordToRepeatDto(final Word word, final WordMethod method, final CategoryMode categoryMode) {
         final List<WordPartDto> wordPartDtos = word.getWordParts().stream()
                 .sorted((wp1, wp2) -> wp1.getPosition().compareTo(wp2.getPosition()))
                 .map(WordMapper::wordPartEntityToDto)

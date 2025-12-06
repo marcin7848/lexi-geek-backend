@@ -1,7 +1,7 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
-import io.learn.lexigeek.word.dto.RepeatMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,7 +35,7 @@ class RepeatSession extends AbstractUuidEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "method", nullable = false, length = 20)
-    private RepeatMethod method;
+    private CategoryMethod method;
 
     @ManyToMany
     @JoinTable(
