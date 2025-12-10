@@ -26,4 +26,6 @@ public interface WordFacade {
     WordDto chooseWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid);
 
     WordDto updateWordCategories(final UUID languageUuid, final UUID wordUuid, final UpdateWordCategoriesForm form);
+
+    void resetWordTime(final UUID languageUuid, final UUID categoryUuid);
 }

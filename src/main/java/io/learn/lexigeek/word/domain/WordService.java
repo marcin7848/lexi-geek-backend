@@ -10,6 +10,7 @@ import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.pageable.PageableUtils;
 import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
+import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
@@ -21,13 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -38,6 +34,7 @@ class WordService implements WordFacade {
     private final WordRepository wordRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryFacade categoryFacade;
+    private final LanguageFacade languageFacade;
 
     @Override
     public PageDto<WordDto> getWords(final UUID languageUuid, final UUID categoryUuid,
@@ -236,5 +233,20 @@ class WordService implements WordFacade {
 
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
+    }
+
+    @Override
+    @Transactional
+    public void resetWordTime(final UUID languageUuid, final UUID categoryUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final LocalDateTime now = LocalDateTime.now();
+
+        if (categoryUuid != null) {
+            categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
+            wordRepository.updateResetTimeByCategoryUuid(categoryUuid, now);
+        } else {
+            wordRepository.updateResetTimeByLanguageUuid(languageUuid, now);
+        }
     }
 }

@@ -8,6 +8,7 @@ import io.learn.lexigeek.common.pageable.OrderString;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.validation.ErrorCodes;
+import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
@@ -43,7 +44,8 @@ class WordServiceTest {
     private final WordRepository wordRepository = mock(WordRepository.class);
     private final CategoryRepository categoryRepository = mock(CategoryRepository.class);
     private final CategoryFacade categoryFacade = mock(CategoryFacade.class);
-    private final WordService wordService = new WordService(wordRepository, categoryRepository, categoryFacade);
+    private final LanguageFacade languageFacade = mock(LanguageFacade.class);
+    private final WordService wordService = new WordService(wordRepository, categoryRepository, categoryFacade, languageFacade);
 
     private UUID languageUuid;
     private UUID categoryUuid;
