@@ -131,6 +131,37 @@ class RepeatingService implements RepeatingFacade {
         }
     }
 
+    private boolean shouldRemoveWordFromQueue(final Word word, final CategoryMethod sessionMethod) {
+        final LocalDateTime resetTime = word.getResetTime();
+        final CategoryMethod wordMethod = word.getCategoryMethod();
+
+        final List<WordStats> correctStatsAfterReset = word.getWordStats().stream()
+                .filter(stat -> stat.getCorrect() && stat.getAnswerTime().isAfter(resetTime))
+                .toList();
+
+        if (sessionMethod == CategoryMethod.BOTH && wordMethod == CategoryMethod.BOTH) {
+            final boolean hasQuestionToAnswer = correctStatsAfterReset.stream()
+                    .anyMatch(stat -> stat.getMethod() == WordMethod.QUESTION_TO_ANSWER);
+            final boolean hasAnswerToQuestion = correctStatsAfterReset.stream()
+                    .anyMatch(stat -> stat.getMethod() == WordMethod.ANSWER_TO_QUESTION);
+            return hasQuestionToAnswer && hasAnswerToQuestion;
+        }
+
+        if (sessionMethod == CategoryMethod.BOTH) {
+            final WordMethod requiredMethod = wordMethod == CategoryMethod.QUESTION_TO_ANSWER
+                    ? WordMethod.QUESTION_TO_ANSWER
+                    : WordMethod.ANSWER_TO_QUESTION;
+            return correctStatsAfterReset.stream()
+                    .anyMatch(stat -> stat.getMethod() == requiredMethod);
+        }
+
+        final WordMethod requiredMethod = sessionMethod == CategoryMethod.QUESTION_TO_ANSWER
+                ? WordMethod.QUESTION_TO_ANSWER
+                : WordMethod.ANSWER_TO_QUESTION;
+        return correctStatsAfterReset.stream()
+                .anyMatch(stat -> stat.getMethod() == requiredMethod);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public RepeatWordDto getNextWord(final UUID languageUuid) {
@@ -180,13 +211,8 @@ class RepeatingService implements RepeatingFacade {
         wordStats.setAnswerTime(LocalDateTime.now());
         word.addWordStats(wordStats);
 
-        if (correct) {
-            // Update reset time based on spaced repetition
-            final int repetitionCount = word.getWordStats().size();
-            final LocalDateTime resetTime = calculateResetTime(repetitionCount);
-            word.setResetTime(resetTime);
-
-            // Remove word from queue
+        if (correct && shouldRemoveWordFromQueue(word, session.getMethod())) {
+            // Remove word from queue only when all required methods are completed
             final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
             updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
             session.setWordQueue(updatedQueue);
@@ -449,12 +475,5 @@ class RepeatingService implements RepeatingFacade {
     }
 
     private record CheckAnswerResult(boolean correct, List<CheckAnswerResultDto.AnswerDetail> answerDetails) {
-    }
-
-    private LocalDateTime calculateResetTime(final int repetitionCount) {
-        final int[] intervals = {1, 3, 7, 14, 30, 60, 90, 180, 365};
-        final int index = Math.min(repetitionCount - 1, intervals.length - 1);
-        final int days = intervals[Math.max(0, index)];
-        return LocalDateTime.now().plusDays(days);
     }
 }
