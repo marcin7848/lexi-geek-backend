@@ -89,6 +89,91 @@ class RepeatingService implements RepeatingFacade {
         return RepeatMapper.sessionToDto(session, wordsLeft);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public RepeatWordDto getNextWord(final UUID languageUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
+
+        if (session.getWordQueue().isEmpty()) {
+            throw new NotFoundException(ErrorCodes.NO_MORE_WORDS_IN_SESSION);
+        }
+
+        final List<Word> wordQueue = session.getWordQueue();
+        final int randomIndex = new Random().nextInt(wordQueue.size());
+        final Word word = wordQueue.get(randomIndex);
+
+        final WordMethod wordMethod = determineWordMethod(word, session.getMethod());
+
+        final CategoryMode categoryMode = word.getCategories().stream()
+                .findFirst()
+                .map(Category::getMode)
+                .orElse(CategoryMode.DICTIONARY);
+
+        return RepeatMapper.wordToRepeatDto(word, wordMethod, categoryMode);
+    }
+
+    @Override
+    @Transactional
+    public CheckAnswerResultDto checkAnswer(final UUID languageUuid, final UUID wordUuid, final CheckAnswerForm form) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
+
+        final List<Word> wordQueue = session.getWordQueue();
+        final Word word = wordQueue.stream()
+                .filter(w -> w.getUuid().equals(wordUuid))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid));
+
+        final CheckAnswerResult answerResult = checkAnswers(word, form);
+        final boolean correct = answerResult.correct();
+
+        final WordStats wordStats = new WordStats();
+        wordStats.setCorrect(correct);
+        wordStats.setMethod(form.method());
+        wordStats.setAnswerTime(LocalDateTime.now());
+        word.addWordStats(wordStats);
+
+        if (correct && shouldRemoveWordFromQueue(word, session.getMethod())) {
+            final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
+            updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
+            session.setWordQueue(updatedQueue);
+        }
+
+        wordRepository.save(word);
+
+        final int wordsLeft = calculateWordsLeftInSession(session);
+        final boolean sessionActive = wordsLeft > 0;
+
+        if (sessionActive) {
+            repeatSessionRepository.save(session);
+        } else {
+            repeatSessionRepository.delete(session);
+        }
+
+        return new CheckAnswerResultDto(correct, wordsLeft, sessionActive, answerResult.answerDetails());
+    }
+
+    @Override
+    @Transactional
+    public void resetSession(final UUID languageUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
+
+        session.getWordQueue().forEach(word -> {
+            word.setResetTime(LocalDateTime.now());
+        });
+
+        wordRepository.saveAll(session.getWordQueue());
+        repeatSessionRepository.delete(session);
+    }
+
     private int calculateWordsLeftInSession(final RepeatSession session) {
         int totalWordsLeft = 0;
 
@@ -162,92 +247,6 @@ class RepeatingService implements RepeatingFacade {
                 .anyMatch(stat -> stat.getMethod() == requiredMethod);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public RepeatWordDto getNextWord(final UUID languageUuid) {
-        languageFacade.verifyLanguageOwnership(languageUuid);
-
-        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
-
-        if (session.getWordQueue().isEmpty()) {
-            throw new NotFoundException(ErrorCodes.NO_MORE_WORDS_IN_SESSION);
-        }
-
-        final List<Word> wordQueue = session.getWordQueue();
-        final int randomIndex = new Random().nextInt(wordQueue.size());
-        final Word word = wordQueue.get(randomIndex);
-
-        final WordMethod wordMethod = determineWordMethod(word, session.getMethod());
-
-        final CategoryMode categoryMode = word.getCategories().stream()
-                .findFirst()
-                .map(Category::getMode)
-                .orElse(CategoryMode.DICTIONARY);
-
-        return RepeatMapper.wordToRepeatDto(word, wordMethod, categoryMode);
-    }
-
-    @Override
-    @Transactional
-    public CheckAnswerResultDto checkAnswer(final UUID languageUuid, final UUID wordUuid, final CheckAnswerForm form) {
-        languageFacade.verifyLanguageOwnership(languageUuid);
-
-        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
-
-        final List<Word> wordQueue = session.getWordQueue();
-        final Word word = wordQueue.stream()
-                .filter(w -> w.getUuid().equals(wordUuid))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.WORD_NOT_IN_SESSION, wordUuid));
-
-        final CheckAnswerResult answerResult = checkAnswers(word, form);
-        final boolean correct = answerResult.correct();
-
-        final WordStats wordStats = new WordStats();
-        wordStats.setCorrect(correct);
-        wordStats.setMethod(form.method());
-        wordStats.setAnswerTime(LocalDateTime.now());
-        word.addWordStats(wordStats);
-
-        if (correct && shouldRemoveWordFromQueue(word, session.getMethod())) {
-            // Remove word from queue only when all required methods are completed
-            final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
-            updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
-            session.setWordQueue(updatedQueue);
-        }
-
-        wordRepository.save(word);
-
-        final int wordsLeft = calculateWordsLeftInSession(session);
-        final boolean sessionActive = wordsLeft > 0;
-
-        if (sessionActive) {
-            repeatSessionRepository.save(session);
-        } else {
-            repeatSessionRepository.delete(session);
-        }
-
-        return new CheckAnswerResultDto(correct, wordsLeft, sessionActive, answerResult.answerDetails());
-    }
-
-    @Override
-    @Transactional
-    public void resetSession(final UUID languageUuid) {
-        languageFacade.verifyLanguageOwnership(languageUuid);
-
-        final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
-
-        session.getWordQueue().forEach(word -> {
-            word.setResetTime(LocalDateTime.now());
-        });
-
-        wordRepository.saveAll(session.getWordQueue());
-        repeatSessionRepository.delete(session);
-    }
-
     private List<Word> prioritizeWords(final List<Word> words, final Boolean includeChosen) {
         final List<Word> result = new ArrayList<>();
         final List<Word> chosenWords = new ArrayList<>();
@@ -288,6 +287,7 @@ class RepeatingService implements RepeatingFacade {
     }
 
     private boolean hasRecentIncorrectAttempts(final Word word) {
+        //TODO: do poprawy
         if (word.getWordStats().isEmpty()) {
             return false;
         }
@@ -393,13 +393,8 @@ class RepeatingService implements RepeatingFacade {
             }
         }
 
-        if (sessionMethod == CategoryMethod.BOTH) {
-            return categoryMethod == CategoryMethod.QUESTION_TO_ANSWER
-                    ? WordMethod.QUESTION_TO_ANSWER
-                    : WordMethod.ANSWER_TO_QUESTION;
-        }
-
-        return sessionMethod == CategoryMethod.QUESTION_TO_ANSWER
+        final CategoryMethod effectiveMethod = sessionMethod == CategoryMethod.BOTH ? categoryMethod : sessionMethod;
+        return effectiveMethod == CategoryMethod.QUESTION_TO_ANSWER
                 ? WordMethod.QUESTION_TO_ANSWER
                 : WordMethod.ANSWER_TO_QUESTION;
     }
