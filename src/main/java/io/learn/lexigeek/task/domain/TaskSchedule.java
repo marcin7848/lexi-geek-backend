@@ -2,18 +2,13 @@ package io.learn.lexigeek.task.domain;
 
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import io.learn.lexigeek.task.dto.TaskFrequency;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "task_schedules")
@@ -41,5 +36,5 @@ class TaskSchedule extends AbstractUuidEntity {
     private Integer frequencyValue;
 
     @Column(name = "last_run_at")
-    private java.time.LocalDateTime lastRunAt;
+    private LocalDateTime lastRunAt;
 }
