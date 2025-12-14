@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset marcin.kaczor:8 labels:statistics
+--changeset marcin.kaczor:8 labels:LG-8
 
 CREATE TABLE account_stars
 (
@@ -13,3 +13,5 @@ CREATE TABLE account_stars
 
 CREATE INDEX idx_account_stars_account ON account_stars (account_id);
 CREATE INDEX idx_account_stars_created ON account_stars (created);
+
+--rollback DROP TABLE "account_stars";

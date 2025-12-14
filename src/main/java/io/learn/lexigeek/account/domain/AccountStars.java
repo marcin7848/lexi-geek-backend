@@ -21,7 +21,7 @@ class AccountStars extends AbstractUuidEntity {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @Column(name = "date", nullable = false)
+    @Column(name = "created", nullable = false)
     private LocalDateTime created;
 
     @Column(name = "stars", nullable = false)
