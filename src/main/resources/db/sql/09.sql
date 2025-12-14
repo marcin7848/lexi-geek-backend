@@ -1,0 +1,66 @@
+--liquibase formatted sql
+--changeset marcin.kaczor:9 labels:LG-10
+
+CREATE TABLE tasks
+(
+    id           BIGINT PRIMARY KEY,
+    uuid         UUID        NOT NULL UNIQUE,
+    created      TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    type         VARCHAR(50) NOT NULL,
+    current      INTEGER     NOT NULL DEFAULT 0,
+    maximum      INTEGER     NOT NULL,
+    stars_reward INTEGER     NOT NULL,
+    language_id  BIGINT      NOT NULL
+        CONSTRAINT fk_tasks_language REFERENCES languages (id) ON DELETE CASCADE,
+    account_id   BIGINT      NOT NULL
+        CONSTRAINT fk_tasks_account REFERENCES accounts (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_tasks_account ON tasks (account_id);
+CREATE INDEX idx_tasks_language ON tasks (language_id);
+CREATE INDEX idx_tasks_type ON tasks (type);
+
+CREATE TABLE task_settings
+(
+    id                        BIGINT PRIMARY KEY,
+    uuid                      UUID    NOT NULL UNIQUE,
+    created                   TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    repeat_dictionary_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    repeat_dictionary_maximum INTEGER NOT NULL DEFAULT 30,
+    repeat_exercise_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+    repeat_exercise_maximum   INTEGER NOT NULL DEFAULT 30,
+    add_dictionary_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+    add_dictionary_maximum    INTEGER NOT NULL DEFAULT 10,
+    add_exercise_enabled      BOOLEAN NOT NULL DEFAULT FALSE,
+    add_exercise_maximum      INTEGER NOT NULL DEFAULT 10,
+    language_id               BIGINT  NOT NULL
+        CONSTRAINT fk_task_settings_language REFERENCES languages (id) ON DELETE CASCADE,
+    account_id                BIGINT  NOT NULL
+        CONSTRAINT fk_task_settings_account REFERENCES accounts (id) ON DELETE CASCADE,
+    CONSTRAINT unique_task_settings_language_account UNIQUE (language_id, account_id)
+);
+
+CREATE INDEX idx_task_settings_account ON task_settings (account_id);
+CREATE INDEX idx_task_settings_language ON task_settings (language_id);
+
+CREATE TABLE task_schedules
+(
+    id              BIGINT PRIMARY KEY,
+    uuid            UUID        NOT NULL UNIQUE,
+    created         TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    hour            INTEGER     NOT NULL DEFAULT 0,
+    minute          INTEGER     NOT NULL DEFAULT 0,
+    frequency       VARCHAR(50) NOT NULL DEFAULT 'DAILY',
+    frequency_value INTEGER,
+    account_id      BIGINT      NOT NULL
+        CONSTRAINT fk_task_schedules_account REFERENCES accounts (id) ON DELETE CASCADE,
+    CONSTRAINT unique_task_schedule_account UNIQUE (account_id),
+    CONSTRAINT check_hour CHECK (hour >= 0 AND hour <= 23),
+    CONSTRAINT check_minute CHECK (minute >= 0 AND minute <= 59)
+);
+
+CREATE INDEX idx_task_schedules_account ON task_schedules (account_id);
+
+--rollback DROP TABLE "task_schedules";
+--rollback DROP TABLE "task_settings";
+--rollback DROP TABLE "tasks";
