@@ -10,6 +10,7 @@ import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.pageable.PageableUtils;
 import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
+import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
@@ -21,11 +22,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -36,6 +34,7 @@ class WordService implements WordFacade {
     private final WordRepository wordRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryFacade categoryFacade;
+    private final LanguageFacade languageFacade;
 
     @Override
     public PageDto<WordDto> getWords(final UUID languageUuid, final UUID categoryUuid,
@@ -46,9 +45,30 @@ class WordService implements WordFacade {
 
         final WordSpecification specification = new WordSpecification(form, categoryUuid);
 
+
+        final String sortField = pageableRequest.getFirstSort().getField();
+        final boolean sortByComputedField = "lastTimeRepeated".equals(sortField) || "repeated".equals(sortField);
+
+        if (sortByComputedField) {
+            final List<Word> allWords = wordRepository.findAll(specification);
+            final List<WordDto> wordDtos = allWords.stream()
+                    .map(WordMapper::entityToDto)
+                    .toList();
+
+            final Map<String, Comparator<WordDto>> customComparators = Map.of(
+                    "lastTimeRepeated", Comparator.comparing(WordDto::lastTimeRepeated,
+                            Comparator.nullsLast(Comparator.naturalOrder())),
+                    "repeated", Comparator.comparing(WordDto::repeated,
+                            Comparator.nullsLast(Comparator.naturalOrder()))
+            );
+
+            return PageableUtils.listToPageDto(wordDtos, pageableRequest, customComparators);
+        }
+
         return PageableUtils.toDto(wordRepository.findAll(specification, PageableUtils.createPageable(pageableRequest))
                 .map(WordMapper::entityToDto), pageableRequest);
     }
+
 
     @Override
     public WordDto getWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
@@ -78,7 +98,7 @@ class WordService implements WordFacade {
                     .map(CategoryDto::uuid)
                     .collect(toSet());
 
-            final List<Word> existingWords = wordRepository.findByCategoryUuidsWithDetails(categories);
+            final List<Word> existingWords = wordRepository.findByCategoryUuids(categories);
 
             final Word matchingWord = findWordWithMatchingParts(existingWords, word);
 
@@ -213,5 +233,20 @@ class WordService implements WordFacade {
 
         final Word savedWord = wordRepository.save(word);
         return WordMapper.entityToDto(savedWord);
+    }
+
+    @Override
+    @Transactional
+    public void resetWordTime(final UUID languageUuid, final UUID categoryUuid) {
+        languageFacade.verifyLanguageOwnership(languageUuid);
+
+        final LocalDateTime now = LocalDateTime.now();
+
+        if (categoryUuid != null) {
+            categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
+            wordRepository.updateResetTimeByCategoryUuid(categoryUuid, now);
+        } else {
+            wordRepository.updateResetTimeByLanguageUuid(languageUuid, now);
+        }
     }
 }

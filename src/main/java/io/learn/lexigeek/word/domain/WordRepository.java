@@ -2,10 +2,12 @@ package io.learn.lexigeek.word.domain;
 
 import io.learn.lexigeek.common.repository.UUIDAwareJpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -32,7 +34,7 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
                        LEFT JOIN FETCH w.categories c
                        WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid IN :categoryUuids)
             """)
-    List<Word> findByCategoryUuidsWithDetails(@Param("categoryUuids") final Set<UUID> categoryUuids);
+    List<Word> findByCategoryUuids(@Param("categoryUuids") final Set<UUID> categoryUuids);
 
     @Query("""
             SELECT w FROM Word w
@@ -43,5 +45,20 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
             """)
     Optional<Word> findByUuidAndLanguageUuid(@Param("uuid") final UUID uuid,
                                              @Param("languageUuid") final UUID languageUuid);
-}
 
+    @Modifying
+    @Query("""
+            UPDATE Word w SET w.resetTime = :resetTime
+            WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.uuid = :categoryUuid)
+            """)
+    void updateResetTimeByCategoryUuid(@Param("categoryUuid") final UUID categoryUuid,
+                                       @Param("resetTime") final LocalDateTime resetTime);
+
+    @Modifying
+    @Query("""
+            UPDATE Word w SET w.resetTime = :resetTime
+            WHERE EXISTS (SELECT 1 FROM w.categories cat WHERE cat.language.uuid = :languageUuid)
+            """)
+    void updateResetTimeByLanguageUuid(@Param("languageUuid") final UUID languageUuid,
+                                       @Param("resetTime") final LocalDateTime resetTime);
+}

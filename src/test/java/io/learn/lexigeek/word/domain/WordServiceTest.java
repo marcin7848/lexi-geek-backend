@@ -8,6 +8,7 @@ import io.learn.lexigeek.common.pageable.OrderString;
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.validation.ErrorCodes;
+import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
@@ -43,7 +44,8 @@ class WordServiceTest {
     private final WordRepository wordRepository = mock(WordRepository.class);
     private final CategoryRepository categoryRepository = mock(CategoryRepository.class);
     private final CategoryFacade categoryFacade = mock(CategoryFacade.class);
-    private final WordService wordService = new WordService(wordRepository, categoryRepository, categoryFacade);
+    private final LanguageFacade languageFacade = mock(LanguageFacade.class);
+    private final WordService wordService = new WordService(wordRepository, categoryRepository, categoryFacade, languageFacade);
 
     private UUID languageUuid;
     private UUID categoryUuid;
@@ -77,7 +79,7 @@ class WordServiceTest {
             when(wordRepository.findAll(any(WordSpecification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(Collections.singletonList(word), PageRequest.of(0, 10), 1));
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When
@@ -105,7 +107,7 @@ class WordServiceTest {
             when(wordRepository.findAll(any(WordSpecification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0));
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When
@@ -124,7 +126,7 @@ class WordServiceTest {
             doThrow(new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid))
                     .when(categoryFacade).verifyCategoryAccess(languageUuid, categoryUuid);
 
-            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null, null);
+            final WordFilterForm filter = new WordFilterForm(null, null, null, null, null);
             final PageableRequest pageable = new PageableRequest(1, 10, null, OrderString.asc, false);
 
             // When & Then
@@ -261,7 +263,7 @@ class WordServiceTest {
             categoriesPage.setPageSize(10);
             categoriesPage.setTotal(2);
             when(categoryFacade.getCategories(any(), any(), any())).thenReturn(categoriesPage);
-            when(wordRepository.findByCategoryUuidsWithDetails(anySet())).thenReturn(Collections.emptyList());
+            when(wordRepository.findByCategoryUuids(anySet())).thenReturn(Collections.emptyList());
 
             final Word savedWord = new Word();
             savedWord.setUuid(UUID.randomUUID());
@@ -272,7 +274,7 @@ class WordServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(wordRepository).findByCategoryUuidsWithDetails(anySet());
+            verify(wordRepository).findByCategoryUuids(anySet());
 
             final ArgumentCaptor<Word> captor = ArgumentCaptor.forClass(Word.class);
             verify(wordRepository).save(captor.capture());
@@ -306,7 +308,7 @@ class WordServiceTest {
             categoriesPage.setPageSize(10);
             categoriesPage.setTotal(1);
             when(categoryFacade.getCategories(any(), any(), any())).thenReturn(categoriesPage);
-            when(wordRepository.findByCategoryUuidsWithDetails(anySet())).thenReturn(List.of(existingWord));
+            when(wordRepository.findByCategoryUuids(anySet())).thenReturn(List.of(existingWord));
             when(wordRepository.save(any(Word.class))).thenReturn(existingWord);
 
             // When
@@ -314,7 +316,7 @@ class WordServiceTest {
 
             // Then
             assertThat(result).isNotNull();
-            verify(wordRepository).findByCategoryUuidsWithDetails(anySet());
+            verify(wordRepository).findByCategoryUuids(anySet());
 
             final ArgumentCaptor<Word> captor = ArgumentCaptor.forClass(Word.class);
             verify(wordRepository).save(captor.capture());

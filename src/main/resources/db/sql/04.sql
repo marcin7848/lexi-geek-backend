@@ -9,15 +9,12 @@ CREATE TABLE "words"
     chosen             BOOLEAN                     NOT NULL DEFAULT FALSE,
     comment            TEXT                        NULL,
     created            TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_time_repeated TIMESTAMP WITHOUT TIME ZONE NULL,
     mechanism          VARCHAR(5)                  NOT NULL CHECK (mechanism IN ('BASIC', 'TABLE')),
-    reset_time         TIMESTAMP WITHOUT TIME ZONE NULL,
-    to_repeat          BOOLEAN                     NOT NULL DEFAULT FALSE
+    reset_time         TIMESTAMP WITHOUT TIME ZONE NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_words_accepted ON words (accepted);
 CREATE INDEX IF NOT EXISTS idx_words_chosen ON words (chosen);
-CREATE INDEX IF NOT EXISTS idx_words_to_repeat ON words (to_repeat);
 CREATE INDEX IF NOT EXISTS idx_words_mechanism ON words (mechanism);
 
 CREATE TABLE "category_word"

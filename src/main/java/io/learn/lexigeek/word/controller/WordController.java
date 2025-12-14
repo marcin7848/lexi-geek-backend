@@ -11,16 +11,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -35,6 +26,7 @@ class WordController {
         private static final String WORD_ACCEPT = WORD_BY_UUID + "/accept";
         private static final String WORD_CHOOSE = WORD_BY_UUID + "/choose";
         private static final String WORD_CATEGORIES = "/languages/{languageUuid}/words/{wordUuid}/categories";
+        private static final String RESET_TIME = "/languages/{languageUuid}/reset-time";
     }
 
     private final WordFacade wordFacade;
@@ -97,6 +89,13 @@ class WordController {
                                  @PathVariable final UUID wordUuid,
                                  @RequestBody @Valid final UpdateWordCategoriesForm form) {
         return wordFacade.updateWordCategories(languageUuid, wordUuid, form);
+    }
+
+    @PostMapping(Routes.RESET_TIME)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void resetWordTime(@PathVariable final UUID languageUuid,
+                       @RequestParam(required = false) final UUID categoryUuid) {
+        wordFacade.resetWordTime(languageUuid, categoryUuid);
     }
 }
 

@@ -3,15 +3,7 @@ package io.learn.lexigeek.word.domain;
 import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.category.domain.CategoryMode;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -35,8 +27,6 @@ class Category extends AbstractUuidEntity {
     @Column(name = "method", nullable = false, length = 18)
     private CategoryMethod method;
 
-
-
     @Column(name = "name")
     private String name;
 
@@ -44,4 +34,3 @@ class Category extends AbstractUuidEntity {
     @JoinColumn(name = "language_id")
     private Language language;
 }
-

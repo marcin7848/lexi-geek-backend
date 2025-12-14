@@ -1,5 +1,6 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.common.entity.AbstractUuidEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "words")
@@ -42,21 +44,12 @@ class Word extends AbstractUuidEntity {
     @Column(name = "created", nullable = false)
     private LocalDateTime created = LocalDateTime.now();
 
-    @Column(name = "last_time_repeated")
-    private LocalDateTime lastTimeRepeated;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "mechanism", nullable = false, length = 5)
     private WordMechanism mechanism;
 
-    @Column(name = "repeated", nullable = false)
-    private Integer repeated = 0;
-
     @Column(name = "reset_time")
-    private LocalDateTime resetTime;
-
-    @Column(name = "to_repeat", nullable = false)
-    private Boolean toRepeat = false;
+    private LocalDateTime resetTime = LocalDateTime.now();
 
     @OneToMany(mappedBy = "wordEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WordPart> wordParts = new ArrayList<>();
@@ -98,6 +91,20 @@ class Word extends AbstractUuidEntity {
 
     public void removeCategory(final Category category) {
         categories.remove(category);
+    }
+
+    public CategoryMethod getCategoryMethod() {
+        final Set<CategoryMethod> methods = categories.stream()
+                .map(Category::getMethod)
+                .collect(Collectors.toSet());
+
+        if (methods.size() == 1) {
+            return methods.iterator().next();
+        }
+
+        return methods.contains(CategoryMethod.QUESTION_TO_ANSWER)
+                ? CategoryMethod.QUESTION_TO_ANSWER
+                : CategoryMethod.ANSWER_TO_QUESTION;
     }
 }
 

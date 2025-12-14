@@ -16,7 +16,6 @@ public record WordDto(UUID uuid,
                       WordMechanism mechanism,
                       Integer repeated,
                       LocalDateTime resetTime,
-                      Boolean toRepeat,
                       List<WordPartDto> wordParts,
                       Set<String> categoryNames) {
 }
