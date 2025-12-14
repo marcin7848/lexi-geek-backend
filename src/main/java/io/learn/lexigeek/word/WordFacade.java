@@ -7,6 +7,9 @@ import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
 import io.learn.lexigeek.word.dto.WordForm;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface WordFacade {
@@ -28,4 +31,14 @@ public interface WordFacade {
     WordDto updateWordCategories(final UUID languageUuid, final UUID wordUuid, final UpdateWordCategoriesForm form);
 
     void resetWordTime(final UUID languageUuid, final UUID categoryUuid);
+
+    Map<LocalDate, Map<UUID, Integer>> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
+                                                                             final LocalDate startDate,
+                                                                             final LocalDate endDate,
+                                                                             final List<UUID> languageUuids);
+
+    Map<LocalDate, Map<UUID, Integer>> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                                           final LocalDate startDate,
+                                                                           final LocalDate endDate,
+                                                                           final List<UUID> languageUuids);
 }

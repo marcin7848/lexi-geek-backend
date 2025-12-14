@@ -1,12 +1,14 @@
 package io.learn.lexigeek.word.domain;
 
 import io.learn.lexigeek.common.repository.UUIDAwareJpaRepository;
+import io.learn.lexigeek.word.dto.WordStatsProjection;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -61,4 +63,18 @@ interface WordRepository extends UUIDAwareJpaRepository<Word, Long>, JpaSpecific
             """)
     void updateResetTimeByLanguageUuid(@Param("languageUuid") final UUID languageUuid,
                                        @Param("resetTime") final LocalDateTime resetTime);
+
+    @Query("""
+            SELECT CAST(w.created AS LocalDate) as date, c.language.uuid as languageUuid, COUNT(DISTINCT w.id) as count
+            FROM Word w
+            JOIN w.categories c
+            WHERE c.language.account.uuid = :accountUuid
+                AND CAST(w.created AS LocalDate) BETWEEN :startDate AND :endDate
+                AND (:languageUuids IS NULL OR c.language.uuid IN :languageUuids)
+            GROUP BY CAST(w.created AS LocalDate), c.language.uuid
+            """)
+    List<WordStatsProjection> findWordCreationStatsByDateAndLanguage(@Param("accountUuid") final UUID accountUuid,
+                                                                     @Param("startDate") final LocalDate startDate,
+                                                                     @Param("endDate") final LocalDate endDate,
+                                                                     @Param("languageUuids") final List<UUID> languageUuids);
 }

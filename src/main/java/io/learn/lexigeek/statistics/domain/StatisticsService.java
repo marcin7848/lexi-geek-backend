@@ -6,6 +6,7 @@ import io.learn.lexigeek.common.dto.DateRangeForm;
 import io.learn.lexigeek.statistics.StatisticsFacade;
 import io.learn.lexigeek.statistics.dto.LanguageStats;
 import io.learn.lexigeek.statistics.dto.UserStatDto;
+import io.learn.lexigeek.word.WordFacade;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,8 +23,7 @@ public class StatisticsService implements StatisticsFacade {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_DATE;
 
-    private final WordStatsQueryRepository wordStatsQueryRepository;
-    private final WordQueryRepository wordQueryRepository;
+    private final WordFacade wordFacade;
     private final AccountFacade accountFacade;
 
     @Override
@@ -40,11 +40,11 @@ public class StatisticsService implements StatisticsFacade {
 
         final List<LocalDate> dateRange = start.datesUntil(end.plusDays(1)).toList();
 
-        final Map<LocalDate, Map<UUID, LanguageStatsData>> wordStatsData =
-                wordStatsQueryRepository.getWordStatsByDateAndLanguages(accountUuid, start, end, languageUuids);
+        final Map<LocalDate, Map<UUID, Integer>> wordStatsData =
+                wordFacade.getWordRepeatStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
 
-        final Map<LocalDate, Map<UUID, LanguageStatsData>> wordCreationData =
-                wordQueryRepository.getWordCreationByDateAndLanguages(accountUuid, start, end, languageUuids);
+        final Map<LocalDate, Map<UUID, Integer>> wordCreationData =
+                wordFacade.getWordCreationStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
 
         final Map<LocalDate, Integer> starsData = new HashMap<>();
         if (showStars == null || showStars) {
@@ -60,14 +60,14 @@ public class StatisticsService implements StatisticsFacade {
 
     private UserStatDto buildUserStatDto(
             final LocalDate date,
-            final Map<LocalDate, Map<UUID, LanguageStatsData>> wordStatsData,
-            final Map<LocalDate, Map<UUID, LanguageStatsData>> wordCreationData,
+            final Map<LocalDate, Map<UUID, Integer>> wordStatsData,
+            final Map<LocalDate, Map<UUID, Integer>> wordCreationData,
             final Map<LocalDate, Integer> starsData,
             final Boolean showTotal,
             final Boolean showStars
     ) {
-        final Map<UUID, LanguageStatsData> statsForDate = wordStatsData.getOrDefault(date, new HashMap<>());
-        final Map<UUID, LanguageStatsData> creationForDate = wordCreationData.getOrDefault(date, new HashMap<>());
+        final Map<UUID, Integer> statsForDate = wordStatsData.getOrDefault(date, new HashMap<>());
+        final Map<UUID, Integer> creationForDate = wordCreationData.getOrDefault(date, new HashMap<>());
 
         // Combine all language UUIDs
         final Set<UUID> allLanguageUuids = new HashSet<>();
@@ -77,14 +77,14 @@ public class StatisticsService implements StatisticsFacade {
         // Build language breakdown
         final Map<String, LanguageStats> languageBreakdown = new HashMap<>();
         for (UUID langUuid : allLanguageUuids) {
-            final LanguageStatsData stats = statsForDate.get(langUuid);
-            final LanguageStatsData creation = creationForDate.get(langUuid);
+            final Integer repeatCount = statsForDate.getOrDefault(langUuid, 0);
+            final Integer addCount = creationForDate.getOrDefault(langUuid, 0);
 
             final LanguageStats langStats = new LanguageStats(
-                    stats != null ? stats.repeatDictionary() : 0,
-                    stats != null ? stats.repeatExercise() : 0,
-                    creation != null ? creation.addDictionary() : 0,
-                    creation != null ? creation.addExercise() : 0
+                    repeatCount,  // repeatDictionary
+                    0,            // repeatExercise (set to 0 as we're aggregating)
+                    addCount,     // addDictionary
+                    0             // addExercise (set to 0 as we're aggregating)
             );
             languageBreakdown.put(langUuid.toString(), langStats);
         }
@@ -96,18 +96,14 @@ public class StatisticsService implements StatisticsFacade {
         Integer totalAddEx = null;
 
         if (showTotal == null || showTotal) {
-            totalRepeatDict = languageBreakdown.values().stream()
-                    .mapToInt(LanguageStats::repeatDictionary)
+            totalRepeatDict = statsForDate.values().stream()
+                    .mapToInt(Integer::intValue)
                     .sum();
-            totalRepeatEx = languageBreakdown.values().stream()
-                    .mapToInt(LanguageStats::repeatExercise)
+            totalRepeatEx = 0; // Set to 0 as we're aggregating
+            totalAddDict = creationForDate.values().stream()
+                    .mapToInt(Integer::intValue)
                     .sum();
-            totalAddDict = languageBreakdown.values().stream()
-                    .mapToInt(LanguageStats::addDictionary)
-                    .sum();
-            totalAddEx = languageBreakdown.values().stream()
-                    .mapToInt(LanguageStats::addExercise)
-                    .sum();
+            totalAddEx = 0; // Set to 0 as we're aggregating
         }
 
         final Integer stars = (showStars == null || showStars) ? starsData.get(date) : null;
