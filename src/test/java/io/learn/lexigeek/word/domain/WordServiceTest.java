@@ -506,6 +506,8 @@ class WordServiceTest {
             when(wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid))
                     .thenReturn(Optional.of(existingWord));
             when(wordRepository.save(any(Word.class))).thenReturn(existingWord);
+            when(categoryRepository.findByUuid(categoryUuid)).thenReturn(Optional.of(category));
+            doNothing().when(taskFacade).fillTask(any(), any(), any());
 
             // When
             final WordDto result = wordService.acceptWord(languageUuid, categoryUuid, wordUuid);
@@ -517,6 +519,7 @@ class WordServiceTest {
             verify(wordRepository).save(captor.capture());
             final Word saved = captor.getValue();
             assertThat(saved.getAccepted()).isTrue();
+            verify(taskFacade).fillTask(any(), any(), any());
         }
 
         @Test
