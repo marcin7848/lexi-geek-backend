@@ -2,14 +2,10 @@ package io.learn.lexigeek.word;
 
 import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
-import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
-import io.learn.lexigeek.word.dto.WordDto;
-import io.learn.lexigeek.word.dto.WordFilterForm;
-import io.learn.lexigeek.word.dto.WordForm;
+import io.learn.lexigeek.word.dto.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface WordFacade {
@@ -32,13 +28,13 @@ public interface WordFacade {
 
     void resetWordTime(final UUID languageUuid, final UUID categoryUuid);
 
-    Map<LocalDate, Map<UUID, Integer>> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
-                                                                             final LocalDate startDate,
-                                                                             final LocalDate endDate,
-                                                                             final List<UUID> languageUuids);
+    List<DateStatItem> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
+                                                             final LocalDate startDate,
+                                                             final LocalDate endDate,
+                                                             final List<UUID> languageUuids);
 
-    Map<LocalDate, Map<UUID, Integer>> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
-                                                                           final LocalDate startDate,
-                                                                           final LocalDate endDate,
-                                                                           final List<UUID> languageUuids);
+    List<DateStatItem> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                           final LocalDate startDate,
+                                                           final LocalDate endDate,
+                                                           final List<UUID> languageUuids);
 }

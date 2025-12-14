@@ -252,10 +252,10 @@ class WordService implements WordFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<LocalDate, Map<UUID, Integer>> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
-                                                                                    final LocalDate startDate,
-                                                                                    final LocalDate endDate,
-                                                                                    final List<UUID> languageUuids) {
+    public List<DateStatItem> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
+                                                                    final LocalDate startDate,
+                                                                    final LocalDate endDate,
+                                                                    final List<UUID> languageUuids) {
         final List<WordStatsProjection> results = wordRepository.findWordCreationStatsByDateAndLanguage(
                 accountUuid,
                 startDate,
@@ -263,26 +263,15 @@ class WordService implements WordFacade {
                 languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
         );
 
-        final Map<LocalDate, Map<UUID, Integer>> resultMap = new HashMap<>();
-
-        for (WordStatsProjection projection : results) {
-            final LocalDate date = projection.getDate();
-            final UUID languageUuid = projection.getLanguageUuid();
-            final int count = projection.getCount();
-
-            resultMap.computeIfAbsent(date, d -> new HashMap<>());
-            resultMap.get(date).put(languageUuid, count);
-        }
-
-        return resultMap;
+        return buildDateStatItems(results);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<LocalDate, Map<UUID, Integer>> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
-                                                                                  final LocalDate startDate,
-                                                                                  final LocalDate endDate,
-                                                                                  final List<UUID> languageUuids) {
+    public List<DateStatItem> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                                  final LocalDate startDate,
+                                                                  final LocalDate endDate,
+                                                                  final List<UUID> languageUuids) {
         final List<WordStatsProjection> results = wordStatsRepository.findWordRepeatStatsByDateAndLanguage(
                 accountUuid,
                 startDate,
@@ -290,17 +279,22 @@ class WordService implements WordFacade {
                 languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
         );
 
-        final Map<LocalDate, Map<UUID, Integer>> resultMap = new HashMap<>();
+        return buildDateStatItems(results);
+    }
 
-        for (WordStatsProjection projection : results) {
+    private List<DateStatItem> buildDateStatItems(final List<WordStatsProjection> projections) {
+        final Map<LocalDate, List<LanguageStatItem>> groupedByDate = new HashMap<>();
+
+        for (final WordStatsProjection projection : projections) {
             final LocalDate date = projection.getDate();
-            final UUID languageUuid = projection.getLanguageUuid();
-            final int count = projection.getCount();
+            final LanguageStatItem item = new LanguageStatItem(projection.getLanguageUuid(), projection.getCount());
 
-            resultMap.computeIfAbsent(date, d -> new HashMap<>());
-            resultMap.get(date).put(languageUuid, count);
+            groupedByDate.computeIfAbsent(date, d -> new ArrayList<>()).add(item);
         }
 
-        return resultMap;
+        return groupedByDate.entrySet().stream()
+                .map(entry -> new DateStatItem(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(DateStatItem::date))
+                .toList();
     }
 }
