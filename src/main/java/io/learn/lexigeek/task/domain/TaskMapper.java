@@ -57,6 +57,5 @@ class TaskMapper {
         schedule.setMinute(dto.minute());
         schedule.setFrequency(dto.frequency());
         schedule.setFrequencyValue(dto.frequencyValue());
-        // Note: lastRunAt is not updated from DTO - it's managed by the system
     }
 }
