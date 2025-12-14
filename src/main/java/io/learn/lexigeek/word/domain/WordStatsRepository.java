@@ -21,6 +21,7 @@ interface WordStatsRepository extends UUIDAwareJpaRepository<WordStats, Long> {
             WHERE c.language.account.uuid = :accountUuid
                 AND CAST(ws.answerTime AS LocalDate) BETWEEN :startDate AND :endDate
                 AND (:languageUuids IS NULL OR c.language.uuid IN :languageUuids)
+                AND ws.correct = true
             GROUP BY CAST(ws.answerTime AS LocalDate), c.language.uuid
             """)
     List<WordStatsProjection> findWordRepeatStatsByDateAndLanguage(@Param("accountUuid") final UUID accountUuid,
