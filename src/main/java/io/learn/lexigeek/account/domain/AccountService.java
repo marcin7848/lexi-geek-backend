@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -64,10 +65,10 @@ public class AccountService implements AccountFacade {
 
     @Override
     @Transactional
-    public void addStars(final Integer stars) {
-        final Account account = getAccount();
+    public void addStars(final AccountDto account, final Integer stars) {
+        final Account accountEntity = getAccount(account.uuid());
         final AccountStars accountStars = new AccountStars();
-        accountStars.setAccount(account);
+        accountStars.setAccount(accountEntity);
         accountStars.setStars(stars);
         accountStars.setCreated(LocalDateTime.now());
         accountStarsRepository.save(accountStars);
@@ -113,5 +114,10 @@ public class AccountService implements AccountFacade {
     private Account getAccount(final String email) {
         return accountRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, email));
+    }
+
+    private Account getAccount(final UUID uuid) {
+        return accountRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, uuid));
     }
 }

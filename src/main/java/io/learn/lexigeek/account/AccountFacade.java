@@ -15,7 +15,7 @@ public interface AccountFacade {
 
     void createAccount(final AccountForm form);
 
-    void addStars(final Integer stars);
+    void addStars(final AccountDto account, final Integer stars);
 
     Integer getStars();
 

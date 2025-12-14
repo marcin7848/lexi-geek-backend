@@ -1,6 +1,7 @@
 package io.learn.lexigeek.task.domain;
 
 import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.common.utils.DateTimeUtils;
 import io.learn.lexigeek.task.TaskFacade;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
@@ -27,16 +28,16 @@ class TaskSchedulerService {
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void processTaskSchedules() {
-        final LocalDateTime now = LocalDateTime.now();
+        final LocalDateTime now = DateTimeUtils.timestampUTC();
         final List<TaskSchedule> allSchedules = taskScheduleRepository.findAll();
-        log.debug("Processing task schedules at {}, found {} schedules", now, allSchedules.size());
+        log.debug("Processing task schedules at {} UTC, found {} schedules", now, allSchedules.size());
         for (final TaskSchedule schedule : allSchedules) {
             if (shouldRunSchedule(schedule, now)) {
                 try {
                     reloadTasksForAccount(schedule);
                     schedule.setLastRunAt(now);
                     taskScheduleRepository.save(schedule);
-                    log.info("Successfully reloaded tasks for account {} at {}",
+                    log.info("Successfully reloaded tasks for account {} at {} UTC",
                             schedule.getAccount().getUuid(), now);
                 } catch (final Exception e) {
                     log.error("Failed to reload tasks for account {}: {}",
