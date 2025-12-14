@@ -1,5 +1,6 @@
 package io.learn.lexigeek.task;
 
+import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.task.dto.TaskDto;
 import io.learn.lexigeek.task.dto.TaskScheduleDto;
 import io.learn.lexigeek.task.dto.TaskSettingsDto;
@@ -13,13 +14,15 @@ public interface TaskFacade {
 
     List<TaskDto> reloadTasks();
 
-    void updateTaskProgress(UUID taskUuid, Integer current);
+    List<TaskDto> reloadTasks(final AccountDto accountDto);
+
+    void updateTaskProgress(final UUID taskUuid, final Integer current);
 
     List<TaskSettingsDto> getTaskSettings();
 
-    void updateTaskSettings(List<TaskSettingsDto> settings);
+    void updateTaskSettings(final List<TaskSettingsDto> settings);
 
     TaskScheduleDto getTaskSchedule();
 
-    void updateTaskSchedule(TaskScheduleDto schedule);
+    void updateTaskSchedule(final TaskScheduleDto schedule);
 }

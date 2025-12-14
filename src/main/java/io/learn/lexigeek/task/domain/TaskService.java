@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class TaskService implements TaskFacade {
+
     private final TaskRepository taskRepository;
     private final TaskSettingsRepository taskSettingsRepository;
     private final TaskScheduleRepository taskScheduleRepository;
@@ -42,6 +43,12 @@ public class TaskService implements TaskFacade {
     @Transactional
     public List<TaskDto> reloadTasks() {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
+        return reloadTasks(accountDto);
+    }
+
+    @Override
+    @Transactional
+    public List<TaskDto> reloadTasks(final AccountDto accountDto) {
         taskRepository.deleteAllByAccountId(accountDto.id());
         final List<TaskSettings> allSettings = taskSettingsRepository.findAllByAccountId(accountDto.id());
         final Account account = accountRepository.findById(accountDto.id())
