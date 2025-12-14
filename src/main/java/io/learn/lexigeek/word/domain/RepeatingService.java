@@ -166,9 +166,7 @@ class RepeatingService implements RepeatingFacade {
         final RepeatSession session = repeatSessionRepository.findByLanguageUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.REPEAT_SESSION_NOT_FOUND, languageUuid));
 
-        session.getWordQueue().forEach(word -> {
-            word.setResetTime(LocalDateTime.now());
-        });
+        session.getWordQueue().forEach(word -> word.setResetTime(LocalDateTime.now()));
 
         wordRepository.saveAll(session.getWordQueue());
         repeatSessionRepository.delete(session);
