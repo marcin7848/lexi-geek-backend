@@ -14,15 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class StatisticsService implements StatisticsFacade {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_DATE;
 
     private final WordFacade wordFacade;
     private final AccountFacade accountFacade;
@@ -55,10 +51,8 @@ public class StatisticsService implements StatisticsFacade {
 
         return dateRange.stream()
                 .map(date -> buildUserStatDto(date, wordStatsData, wordCreationData, starsData, showTotal, showStars))
-                .filter(this::hasData)
-                .collect(Collectors.toList());
+                .toList();
     }
-
 
     private UserStatDto buildUserStatDto(final LocalDate date,
                                          final List<DateStatItem> wordStatsData,
@@ -119,12 +113,6 @@ public class StatisticsService implements StatisticsFacade {
                     return result;
                 })
                 .orElse(new HashMap<>());
-    }
-
-    private boolean hasData(final UserStatDto dto) {
-        return (dto.repeat() != null && dto.repeat() > 0) ||
-                (dto.add() != null && dto.add() > 0) ||
-                (dto.stars() != null && dto.stars() > 0);
     }
 
     private UUID getCurrentAccountUuid() {
