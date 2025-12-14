@@ -287,17 +287,20 @@ class RepeatingService implements RepeatingFacade {
     }
 
     private boolean hasRecentIncorrectAttempts(final Word word) {
-        //TODO: do poprawy
         if (word.getWordStats().isEmpty()) {
             return false;
         }
 
-        final LocalDateTime resetTime = word.getResetTime();
-        final LocalDateTime threeHoursBeforeReset = resetTime.minusHours(3);
+        final LocalDateTime newestAnswerTime = word.getWordStats().stream()
+                .map(WordStats::getAnswerTime)
+                .max(LocalDateTime::compareTo)
+                .orElseThrow();
+
+        final LocalDateTime threeHoursBeforeNewest = newestAnswerTime.minusHours(3);
 
         return word.getWordStats().stream()
                 .anyMatch(stat -> !stat.getCorrect()
-                        && stat.getAnswerTime().isAfter(threeHoursBeforeReset));
+                        && stat.getAnswerTime().isAfter(threeHoursBeforeNewest));
     }
 
     private int countRecentIncorrectAttempts(final Word word) {
