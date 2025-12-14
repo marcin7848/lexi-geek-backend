@@ -14,5 +14,5 @@ interface TaskRepository extends UUIDAwareJpaRepository<Task, Long> {
 
     void deleteAllByAccountId(final Long accountId);
 
-    Optional<Task> findByAccountIdAndType(final Long accountId, final TaskType type);
+    Optional<Task> findByAccountIdAndTypeAndLanguageId(final Long accountId, final TaskType type, final Long languageId);
 }

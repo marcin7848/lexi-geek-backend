@@ -6,6 +6,7 @@ import io.learn.lexigeek.task.dto.TaskDto;
 import io.learn.lexigeek.task.dto.TaskType;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface TaskFacade {
 
@@ -19,5 +20,5 @@ public interface TaskFacade {
 
     void updateTaskConfig(final TaskConfigDto config);
 
-    void fillTask(final TaskType taskType, final Integer points);
+    void fillTask(final TaskType taskType, final UUID languageUuid, final Integer points);
 }
