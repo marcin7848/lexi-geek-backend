@@ -1,8 +1,11 @@
 package io.learn.lexigeek.statistics.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
+import io.learn.lexigeek.account.dto.AccountStarsDto;
+import io.learn.lexigeek.common.dto.DateRangeForm;
 import io.learn.lexigeek.statistics.StatisticsFacade;
-import io.learn.lexigeek.statistics.dto.*;
+import io.learn.lexigeek.statistics.dto.LanguageStats;
+import io.learn.lexigeek.statistics.dto.UserStatDto;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,92 +28,34 @@ public class StatisticsService implements StatisticsFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserStatDto> getUserStatistics(
-            final String startDate,
-            final String endDate,
-            final List<UUID> languageUuids,
-            final Boolean showTotal,
-            final Boolean showStars
-    ) {
+    public List<UserStatDto> getUserStatistics(final String startDate,
+                                               final String endDate,
+                                               final List<UUID> languageUuids,
+                                               final Boolean showTotal,
+                                               final Boolean showStars) {
         final UUID accountUuid = getCurrentAccountUuid();
 
         final LocalDate start = startDate != null ? LocalDate.parse(startDate, DATE_FORMATTER) : LocalDate.now().minusYears(1);
         final LocalDate end = endDate != null ? LocalDate.parse(endDate, DATE_FORMATTER) : LocalDate.now();
 
-        // Get all dates in range
         final List<LocalDate> dateRange = start.datesUntil(end.plusDays(1)).toList();
 
-        // Get word stats data (repeated)
         final Map<LocalDate, Map<UUID, LanguageStatsData>> wordStatsData =
                 wordStatsQueryRepository.getWordStatsByDateAndLanguages(accountUuid, start, end, languageUuids);
 
-        // Get word creation data (added)
         final Map<LocalDate, Map<UUID, LanguageStatsData>> wordCreationData =
                 wordQueryRepository.getWordCreationByDateAndLanguages(accountUuid, start, end, languageUuids);
 
-        // Get stars data if needed
         final Map<LocalDate, Integer> starsData = new HashMap<>();
         if (showStars == null || showStars) {
-            final var starsList = languageUuids != null && !languageUuids.isEmpty()
-                    ? accountStarsRepository.findByAccountUuidAndDateBetween(accountUuid, start, end)
-                    : accountStarsRepository.findByAccountUuidAndDateBetween(accountUuid, start, end);
-
-            starsList.forEach(stars -> starsData.put(stars.getCreated(), stars.getStars()));
+            final List<AccountStarsDto> starsList = accountFacade.getStars(new DateRangeForm(start, end));
+            starsList.forEach(stars -> starsData.put(stars.date(), stars.stars()));
         }
 
-        // Build result for each date
         return dateRange.stream()
                 .map(date -> buildUserStatDto(date, wordStatsData, wordCreationData, starsData, showTotal, showStars))
-                .filter(dto -> hasData(dto))
+                .filter(this::hasData)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<UserStatDto> getLanguageStatistics(
-            final UUID languageUuid,
-            final String startDate,
-            final String endDate
-    ) {
-        return getUserStatistics(startDate, endDate, List.of(languageUuid), true, true);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public StatisticsSummary getStatisticsSummary(
-            final String startDate,
-            final String endDate,
-            final List<UUID> languageUuids,
-            final Boolean showTotal,
-            final Boolean showStars
-    ) {
-        final List<UserStatDto> stats = getUserStatistics(startDate, endDate, languageUuids, showTotal, showStars);
-
-        final int totalRepeatedWords = stats.stream()
-                .mapToInt(dto -> (dto.repeatDictionary() != null ? dto.repeatDictionary() : 0) +
-                                (dto.repeatExercise() != null ? dto.repeatExercise() : 0))
-                .sum();
-
-        final int totalAddedWords = stats.stream()
-                .mapToInt(dto -> (dto.addDictionary() != null ? dto.addDictionary() : 0) +
-                                (dto.addExercise() != null ? dto.addExercise() : 0))
-                .sum();
-
-        final int totalStars = stats.stream()
-                .mapToInt(dto -> dto.stars() != null ? dto.stars() : 0)
-                .sum();
-
-        final long dayCount = stats.size();
-        final double avgRepeated = dayCount > 0 ? (double) totalRepeatedWords / dayCount : 0.0;
-        final double avgAdded = dayCount > 0 ? (double) totalAddedWords / dayCount : 0.0;
-        final double avgStars = dayCount > 0 ? (double) totalStars / dayCount : 0.0;
-
-        return new StatisticsSummary(
-                totalRepeatedWords,
-                totalAddedWords,
-                totalStars,
-                new AveragePerDay(avgRepeated, avgAdded, avgStars)
-        );
     }
 
     private UserStatDto buildUserStatDto(
@@ -190,4 +135,3 @@ public class StatisticsService implements StatisticsFacade {
         return accountFacade.getLoggedAccount().uuid();
     }
 }
-

@@ -3,6 +3,8 @@ package io.learn.lexigeek.account.domain;
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.account.dto.AccountForm;
+import io.learn.lexigeek.account.dto.AccountStarsDto;
+import io.learn.lexigeek.common.dto.DateRangeForm;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.AuthorizationException;
 import io.learn.lexigeek.common.exception.NotFoundException;
@@ -14,6 +16,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -25,6 +35,7 @@ public class AccountService implements AccountFacade {
     }
 
     private final AccountRepository accountRepository;
+    private final AccountStarsRepository accountStarsRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -49,6 +60,44 @@ public class AccountService implements AccountFacade {
         account.setPassword(passwordEncoder.encode(form.password()));
         accountRepository.save(account);
         log.info(LogMessages.ACCOUNT_CREATED, account.getUuid());
+    }
+
+    @Override
+    @Transactional
+    public void addStars(final Integer stars) {
+        final Account account = getAccount();
+        final AccountStars accountStars = new AccountStars();
+        accountStars.setAccount(account);
+        accountStars.setStars(stars);
+        accountStars.setCreated(LocalDateTime.now());
+        accountStarsRepository.save(accountStars);
+    }
+
+    @Override
+    public Integer getStars() {
+        final Account account = getAccount();
+        return accountStarsRepository.getTotalStarsByAccount(account);
+    }
+
+    @Override
+    public List<AccountStarsDto> getStars(final DateRangeForm range) {
+        final Account account = getAccount();
+
+        final Map<LocalDate, Integer> starsPerDay =
+                accountStarsRepository.findByAccountAndCreatedBetweenOrderByCreatedAsc(
+                                account, range.min().atStartOfDay(), range.max().atTime(LocalTime.MAX)).stream()
+                        .collect(Collectors.groupingBy(
+                                as -> as.getCreated().toLocalDate(),
+                                Collectors.summingInt(AccountStars::getStars)
+                        ));
+
+        return range.min()
+                .datesUntil(range.max().plusDays(1))
+                .map(date -> AccountStarsMapper.toDto(
+                        date,
+                        starsPerDay.getOrDefault(date, 0)
+                ))
+                .toList();
     }
 
     private Account getAccount() {
