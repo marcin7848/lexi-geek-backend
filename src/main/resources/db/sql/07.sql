@@ -23,3 +23,6 @@ CREATE TABLE repeat_session_words
 
 CREATE INDEX idx_repeat_session_words_session ON repeat_session_words (repeat_session_id);
 CREATE INDEX idx_repeat_session_words_word ON repeat_session_words (word_id);
+
+--rollback DROP TABLE "repeat_sessions";
+--rollback DROP TABLE "repeat_session_words";

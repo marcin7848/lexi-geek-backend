@@ -12,16 +12,14 @@ import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
 import io.learn.lexigeek.word.WordFacade;
-import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
-import io.learn.lexigeek.word.dto.WordDto;
-import io.learn.lexigeek.word.dto.WordFilterForm;
-import io.learn.lexigeek.word.dto.WordForm;
+import io.learn.lexigeek.word.dto.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -32,9 +30,11 @@ import static java.util.stream.Collectors.toSet;
 class WordService implements WordFacade {
 
     private final WordRepository wordRepository;
+    private final WordStatsRepository wordStatsRepository;
     private final CategoryRepository categoryRepository;
     private final CategoryFacade categoryFacade;
     private final LanguageFacade languageFacade;
+
 
     @Override
     public PageDto<WordDto> getWords(final UUID languageUuid, final UUID categoryUuid,
@@ -248,5 +248,53 @@ class WordService implements WordFacade {
         } else {
             wordRepository.updateResetTimeByLanguageUuid(languageUuid, now);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DateStatItem> getWordCreationStatsByDateAndLanguage(final UUID accountUuid,
+                                                                    final LocalDate startDate,
+                                                                    final LocalDate endDate,
+                                                                    final List<UUID> languageUuids) {
+        final List<WordStatsProjection> results = wordRepository.findWordCreationStatsByDateAndLanguage(
+                accountUuid,
+                startDate,
+                endDate,
+                languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
+        );
+
+        return buildDateStatItems(results);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DateStatItem> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                                  final LocalDate startDate,
+                                                                  final LocalDate endDate,
+                                                                  final List<UUID> languageUuids) {
+        final List<WordStatsProjection> results = wordStatsRepository.findWordRepeatStatsByDateAndLanguage(
+                accountUuid,
+                startDate,
+                endDate,
+                languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
+        );
+
+        return buildDateStatItems(results);
+    }
+
+    private List<DateStatItem> buildDateStatItems(final List<WordStatsProjection> projections) {
+        final Map<LocalDate, List<LanguageStatItem>> groupedByDate = new HashMap<>();
+
+        for (final WordStatsProjection projection : projections) {
+            final LocalDate date = projection.getDate();
+            final LanguageStatItem item = new LanguageStatItem(projection.getLanguageUuid(), projection.getCount());
+
+            groupedByDate.computeIfAbsent(date, d -> new ArrayList<>()).add(item);
+        }
+
+        return groupedByDate.entrySet().stream()
+                .map(entry -> new DateStatItem(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(DateStatItem::date))
+                .toList();
     }
 }
