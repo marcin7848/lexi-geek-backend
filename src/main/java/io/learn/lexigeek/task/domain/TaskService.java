@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,16 +118,6 @@ public class TaskService implements TaskFacade {
                 return 1;
             }
         }
-    }
-
-    @Override
-    @Transactional
-    public void updateTaskProgress(final UUID taskUuid, final Integer current) {
-        final AccountDto accountDto = accountFacade.getLoggedAccount();
-        final Task task = taskRepository.findByUuidAndAccountId(taskUuid, accountDto.id())
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.TASK_NOT_FOUND, taskUuid));
-        task.setCurrent(current);
-        taskRepository.save(task);
     }
 
     @Override

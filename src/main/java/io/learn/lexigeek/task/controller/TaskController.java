@@ -2,7 +2,6 @@ package io.learn.lexigeek.task.controller;
 
 import io.learn.lexigeek.task.TaskFacade;
 import io.learn.lexigeek.task.dto.TaskDto;
-import io.learn.lexigeek.task.dto.TaskProgressForm;
 import io.learn.lexigeek.task.dto.TaskScheduleDto;
 import io.learn.lexigeek.task.dto.TaskSettingsDto;
 import jakarta.validation.Valid;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -22,7 +20,6 @@ class TaskController {
     private static final class Routes {
         private static final String TASKS = "/tasks";
         private static final String TASKS_RELOAD = TASKS + "/reload";
-        private static final String TASK_PROGRESS = TASKS + "/{uuid}/progress";
         private static final String TASK_SETTINGS = TASKS + "/settings";
         private static final String TASK_SCHEDULE = TASKS + "/schedule";
     }
@@ -38,13 +35,6 @@ class TaskController {
     @ResponseStatus(HttpStatus.OK)
     List<TaskDto> reloadTasks() {
         return taskFacade.reloadTasks();
-    }
-
-    @PutMapping(Routes.TASK_PROGRESS)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    void updateTaskProgress(@PathVariable final UUID uuid,
-                            @RequestBody @Valid final TaskProgressForm form) {
-        taskFacade.updateTaskProgress(uuid, form.current());
     }
 
     @GetMapping(Routes.TASK_SETTINGS)
