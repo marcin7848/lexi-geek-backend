@@ -101,49 +101,39 @@ public class StatisticsService implements StatisticsFacade {
             final Integer addCount = creationForDate.getOrDefault(langUuid, 0);
 
             final LanguageStats langStats = new LanguageStats(
-                    repeatCount,  // repeatDictionary
-                    0,            // repeatExercise (set to 0 as we're aggregating)
-                    addCount,     // addDictionary
-                    0             // addExercise (set to 0 as we're aggregating)
+                    repeatCount,
+                    addCount
             );
             languageBreakdown.put(langUuid.toString(), langStats);
         }
 
         // Calculate totals
-        Integer totalRepeatDict = null;
-        Integer totalRepeatEx = null;
-        Integer totalAddDict = null;
-        Integer totalAddEx = null;
+        Integer totalRepeat = null;
+        Integer totalAdd = null;
 
         if (showTotal == null || showTotal) {
-            totalRepeatDict = statsForDate.values().stream()
+            totalRepeat = statsForDate.values().stream()
                     .mapToInt(Integer::intValue)
                     .sum();
-            totalRepeatEx = 0; // Set to 0 as we're aggregating
-            totalAddDict = creationForDate.values().stream()
+            totalAdd = creationForDate.values().stream()
                     .mapToInt(Integer::intValue)
                     .sum();
-            totalAddEx = 0; // Set to 0 as we're aggregating
         }
 
         final Integer stars = (showStars == null || showStars) ? starsData.get(date) : null;
 
         return new UserStatDto(
                 date.format(DATE_FORMATTER),
-                totalRepeatDict,
-                totalRepeatEx,
-                totalAddDict,
-                totalAddEx,
+                totalRepeat,
+                totalAdd,
                 stars,
                 languageBreakdown
         );
     }
 
     private boolean hasData(final UserStatDto dto) {
-        return (dto.repeatDictionary() != null && dto.repeatDictionary() > 0) ||
-                (dto.repeatExercise() != null && dto.repeatExercise() > 0) ||
-                (dto.addDictionary() != null && dto.addDictionary() > 0) ||
-                (dto.addExercise() != null && dto.addExercise() > 0) ||
+        return (dto.repeat() != null && dto.repeat() > 0) ||
+                (dto.add() != null && dto.add() > 0) ||
                 (dto.stars() != null && dto.stars() > 0);
     }
 
