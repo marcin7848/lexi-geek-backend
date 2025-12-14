@@ -192,4 +192,15 @@ public class TaskService implements TaskFacade {
         schedule.setAccount(account);
         return schedule;
     }
+
+    @Override
+    @Transactional
+    public void fillTask(final TaskType taskType, final Integer points) {
+        final AccountDto accountDto = accountFacade.getLoggedAccount();
+        final Task task = taskRepository.findByAccountIdAndType(accountDto.id(), taskType)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.TASK_NOT_FOUND, taskType.name()));
+
+        task.setCurrent(task.getCurrent() + points);
+        taskRepository.save(task);
+    }
 }
