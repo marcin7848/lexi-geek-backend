@@ -1,9 +1,8 @@
 package io.learn.lexigeek.task.controller;
 
 import io.learn.lexigeek.task.TaskFacade;
+import io.learn.lexigeek.task.dto.TaskConfigDto;
 import io.learn.lexigeek.task.dto.TaskDto;
-import io.learn.lexigeek.task.dto.TaskScheduleDto;
-import io.learn.lexigeek.task.dto.TaskSettingsDto;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,7 @@ class TaskController {
     private static final class Routes {
         private static final String TASKS = "/tasks";
         private static final String TASKS_RELOAD = TASKS + "/reload";
-        private static final String TASK_SETTINGS = TASKS + "/settings";
-        private static final String TASK_SCHEDULE = TASKS + "/schedule";
+        private static final String TASK_CONFIG = TASKS + "/config";
     }
 
     private final TaskFacade taskFacade;
@@ -37,25 +35,14 @@ class TaskController {
         return taskFacade.reloadTasks();
     }
 
-    @GetMapping(Routes.TASK_SETTINGS)
-    List<TaskSettingsDto> getTaskSettings() {
-        return taskFacade.getTaskSettings();
+    @GetMapping(Routes.TASK_CONFIG)
+    TaskConfigDto getTaskConfig() {
+        return taskFacade.getTaskConfig();
     }
 
-    @PutMapping(Routes.TASK_SETTINGS)
+    @PutMapping(Routes.TASK_CONFIG)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void updateTaskSettings(@RequestBody @Valid final List<TaskSettingsDto> settings) {
-        taskFacade.updateTaskSettings(settings);
-    }
-
-    @GetMapping(Routes.TASK_SCHEDULE)
-    TaskScheduleDto getTaskSchedule() {
-        return taskFacade.getTaskSchedule();
-    }
-
-    @PutMapping(Routes.TASK_SCHEDULE)
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    void updateTaskSchedule(@RequestBody @Valid final TaskScheduleDto schedule) {
-        taskFacade.updateTaskSchedule(schedule);
+    void updateTaskConfig(@RequestBody @Valid final TaskConfigDto config) {
+        taskFacade.updateTaskConfig(config);
     }
 }

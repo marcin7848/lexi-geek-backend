@@ -5,6 +5,7 @@ import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.task.TaskFacade;
+import io.learn.lexigeek.task.dto.TaskConfigDto;
 import io.learn.lexigeek.task.dto.TaskDto;
 import io.learn.lexigeek.task.dto.TaskScheduleDto;
 import io.learn.lexigeek.task.dto.TaskSettingsDto;
@@ -121,19 +122,27 @@ public class TaskService implements TaskFacade {
     }
 
     @Override
-    public List<TaskSettingsDto> getTaskSettings() {
+    public TaskConfigDto getTaskConfig() {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
+
         final List<TaskSettings> settings = taskSettingsRepository.findAllByAccountId(accountDto.id());
-        return settings.stream()
+        final List<TaskSettingsDto> settingsDtos = settings.stream()
                 .map(TaskMapper::settingsEntityToDto)
                 .collect(Collectors.toList());
+
+        final TaskSchedule schedule = taskScheduleRepository.findByAccountId(accountDto.id())
+                .orElseGet(() -> createDefaultSchedule(accountDto));
+        final TaskScheduleDto scheduleDto = TaskMapper.scheduleEntityToDto(schedule);
+
+        return new TaskConfigDto(settingsDtos, scheduleDto);
     }
 
     @Override
     @Transactional
-    public void updateTaskSettings(final List<TaskSettingsDto> settingsDtos) {
+    public void updateTaskConfig(final TaskConfigDto config) {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
-        for (TaskSettingsDto dto : settingsDtos) {
+
+        for (final TaskSettingsDto dto : config.settings()) {
             final Language language = languageRepository.findByUuid(dto.languageUuid())
                     .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, dto.languageUuid()));
             final TaskSettings settings = taskSettingsRepository
@@ -142,6 +151,11 @@ public class TaskService implements TaskFacade {
             TaskMapper.updateSettingsFromDto(settings, dto);
             taskSettingsRepository.save(settings);
         }
+
+        final TaskSchedule schedule = taskScheduleRepository.findByAccountId(accountDto.id())
+                .orElseGet(() -> createDefaultSchedule(accountDto));
+        TaskMapper.updateScheduleFromDto(schedule, config.schedule());
+        taskScheduleRepository.save(schedule);
     }
 
     private TaskSettings createDefaultSettings(final Language language, final AccountDto accountDto) {
@@ -153,23 +167,6 @@ public class TaskService implements TaskFacade {
         return settings;
     }
 
-    @Override
-    public TaskScheduleDto getTaskSchedule() {
-        final AccountDto accountDto = accountFacade.getLoggedAccount();
-        final TaskSchedule schedule = taskScheduleRepository.findByAccountId(accountDto.id())
-                .orElseGet(() -> createDefaultSchedule(accountDto));
-        return TaskMapper.scheduleEntityToDto(schedule);
-    }
-
-    @Override
-    @Transactional
-    public void updateTaskSchedule(final TaskScheduleDto scheduleDto) {
-        final AccountDto accountDto = accountFacade.getLoggedAccount();
-        final TaskSchedule schedule = taskScheduleRepository.findByAccountId(accountDto.id())
-                .orElseGet(() -> createDefaultSchedule(accountDto));
-        TaskMapper.updateScheduleFromDto(schedule, scheduleDto);
-        taskScheduleRepository.save(schedule);
-    }
 
     private TaskSchedule createDefaultSchedule(final AccountDto accountDto) {
         final TaskSchedule schedule = new TaskSchedule();
