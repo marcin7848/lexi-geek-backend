@@ -9,6 +9,7 @@ import io.learn.lexigeek.common.pageable.PageDto;
 import io.learn.lexigeek.common.pageable.PageableRequest;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
+import io.learn.lexigeek.task.TaskFacade;
 import io.learn.lexigeek.word.dto.UpdateWordCategoriesForm;
 import io.learn.lexigeek.word.dto.WordDto;
 import io.learn.lexigeek.word.dto.WordFilterForm;
@@ -42,10 +43,13 @@ import static org.mockito.Mockito.when;
 class WordServiceTest {
 
     private final WordRepository wordRepository = mock(WordRepository.class);
+    private final WordStatsRepository wordStatsRepository = mock(WordStatsRepository.class);
     private final CategoryRepository categoryRepository = mock(CategoryRepository.class);
     private final CategoryFacade categoryFacade = mock(CategoryFacade.class);
     private final LanguageFacade languageFacade = mock(LanguageFacade.class);
-    private final WordService wordService = new WordService(wordRepository, categoryRepository, categoryFacade, languageFacade);
+    private final TaskFacade taskFacade = mock(TaskFacade.class);
+    private final WordService wordService = new WordService(wordRepository, wordStatsRepository, categoryRepository,
+            categoryFacade, languageFacade, taskFacade);
 
     private UUID languageUuid;
     private UUID categoryUuid;
@@ -502,6 +506,8 @@ class WordServiceTest {
             when(wordRepository.findByUuidAndCategoryUuid(wordUuid, categoryUuid))
                     .thenReturn(Optional.of(existingWord));
             when(wordRepository.save(any(Word.class))).thenReturn(existingWord);
+            when(categoryRepository.findByUuid(categoryUuid)).thenReturn(Optional.of(category));
+            doNothing().when(taskFacade).fillTask(any(), any(), any());
 
             // When
             final WordDto result = wordService.acceptWord(languageUuid, categoryUuid, wordUuid);
@@ -513,6 +519,7 @@ class WordServiceTest {
             verify(wordRepository).save(captor.capture());
             final Word saved = captor.getValue();
             assertThat(saved.getAccepted()).isTrue();
+            verify(taskFacade).fillTask(any(), any(), any());
         }
 
         @Test

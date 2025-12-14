@@ -6,6 +6,8 @@ import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
+import io.learn.lexigeek.task.TaskFacade;
+import io.learn.lexigeek.task.dto.TaskType;
 import io.learn.lexigeek.word.RepeatingFacade;
 import io.learn.lexigeek.word.dto.*;
 import lombok.AccessLevel;
@@ -26,6 +28,7 @@ class RepeatingService implements RepeatingFacade {
     private final CategoryRepository categoryRepository;
     private final WordRepository wordRepository;
     private final LanguageFacade languageFacade;
+    private final TaskFacade taskFacade;
 
     @Override
     @Transactional
@@ -138,10 +141,19 @@ class RepeatingService implements RepeatingFacade {
         wordStats.setAnswerTime(LocalDateTime.now());
         word.addWordStats(wordStats);
 
-        if (correct && shouldRemoveWordFromQueue(word, session.getMethod())) {
-            final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
-            updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
-            session.setWordQueue(updatedQueue);
+        if (correct) {
+            final CategoryMode categoryMode = word.getCategories().stream().findFirst().orElseThrow().getMode();
+            final TaskType taskType = categoryMode == CategoryMode.DICTIONARY
+                    ? TaskType.REPEAT_DICTIONARY
+                    : TaskType.REPEAT_EXERCISE;
+
+            taskFacade.fillTask(taskType, languageUuid, 1);
+
+            if(shouldRemoveWordFromQueue(word, session.getMethod())){
+                final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
+                updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
+                session.setWordQueue(updatedQueue);
+            }
         }
 
         wordRepository.save(word);

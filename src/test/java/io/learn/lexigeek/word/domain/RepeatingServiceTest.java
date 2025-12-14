@@ -6,35 +6,20 @@ import io.learn.lexigeek.common.exception.AlreadyExistsException;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
-import io.learn.lexigeek.word.dto.CheckAnswerForm;
-import io.learn.lexigeek.word.dto.CheckAnswerResultDto;
-import io.learn.lexigeek.word.dto.RepeatSessionDto;
-import io.learn.lexigeek.word.dto.RepeatWordDto;
-import io.learn.lexigeek.word.dto.StartRepeatSessionForm;
+import io.learn.lexigeek.task.TaskFacade;
+import io.learn.lexigeek.word.dto.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 class RepeatingServiceTest {
 
@@ -43,12 +28,14 @@ class RepeatingServiceTest {
     private final CategoryRepository categoryRepository = mock(CategoryRepository.class);
     private final WordRepository wordRepository = mock(WordRepository.class);
     private final LanguageFacade languageFacade = mock(LanguageFacade.class);
+    private final TaskFacade taskFacade = mock(TaskFacade.class);
     private final RepeatingService repeatingService = new RepeatingService(
             repeatSessionRepository,
             languageRepository,
             categoryRepository,
             wordRepository,
-            languageFacade
+            languageFacade,
+            taskFacade
     );
 
     private UUID languageUuid;
@@ -754,8 +741,7 @@ class RepeatingServiceTest {
             repeatingService.resetSession(languageUuid);
 
             // Then
-            @SuppressWarnings("unchecked")
-            final ArgumentCaptor<List<Word>> wordsCaptor = ArgumentCaptor.forClass(List.class);
+            @SuppressWarnings("unchecked") final ArgumentCaptor<List<Word>> wordsCaptor = ArgumentCaptor.forClass(List.class);
             verify(wordRepository).saveAll(wordsCaptor.capture());
 
             final List<Word> savedWords = wordsCaptor.getValue();
