@@ -49,6 +49,9 @@ public class TaskService implements TaskFacade {
     @Override
     @Transactional
     public List<TaskDto> reloadTasks(final AccountDto accountDto) {
+        final List<Task> existingTasks = taskRepository.findAllByAccountId(accountDto.id());
+        awardBonusStarsForCompletedTasks(existingTasks, accountDto);
+
         taskRepository.deleteAllByAccountId(accountDto.id());
         final List<TaskSettings> allSettings = taskSettingsRepository.findAllByAccountId(accountDto.id());
         final Account account = accountRepository.findById(accountDto.id())
@@ -61,6 +64,20 @@ public class TaskService implements TaskFacade {
         return newTasks.stream()
                 .map(TaskMapper::entityToDto)
                 .toList();
+    }
+
+    private void awardBonusStarsForCompletedTasks(final List<Task> tasks, final AccountDto accountDto) {
+        int totalBonusStars = 0;
+        for (final Task task : tasks) {
+            if (task.getCurrent() >= task.getMaximum()) {
+                final int bonusStars = task.getStarsReward();
+                totalBonusStars += bonusStars;
+            }
+        }
+
+        if (totalBonusStars > 0) {
+            accountFacade.addStars(accountDto, totalBonusStars);
+        }
     }
 
     private List<Task> generateTasksForLanguage(final TaskSettings settings, final Account account) {
