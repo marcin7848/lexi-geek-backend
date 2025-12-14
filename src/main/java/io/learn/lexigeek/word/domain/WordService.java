@@ -11,6 +11,8 @@ import io.learn.lexigeek.common.pageable.PageableUtils;
 import io.learn.lexigeek.common.pageable.SortOrder;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.language.LanguageFacade;
+import io.learn.lexigeek.task.TaskFacade;
+import io.learn.lexigeek.task.dto.TaskType;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.*;
 import lombok.AccessLevel;
@@ -34,7 +36,7 @@ class WordService implements WordFacade {
     private final CategoryRepository categoryRepository;
     private final CategoryFacade categoryFacade;
     private final LanguageFacade languageFacade;
-
+    private final TaskFacade taskFacade;
 
     @Override
     public PageDto<WordDto> getWords(final UUID languageUuid, final UUID categoryUuid,
@@ -147,6 +149,7 @@ class WordService implements WordFacade {
     }
 
     @Override
+    @Transactional
     public WordDto acceptWord(final UUID languageUuid, final UUID categoryUuid, final UUID wordUuid) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
@@ -155,6 +158,14 @@ class WordService implements WordFacade {
 
         word.setAccepted(true);
         final Word savedWord = wordRepository.save(word);
+
+        final Category category = categoryRepository.findByUuid(categoryUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.CATEGORY_NOT_FOUND, categoryUuid));
+        final TaskType taskType = category.getMode() == CategoryMode.DICTIONARY
+                ? TaskType.ADD_DICTIONARY
+                : TaskType.ADD_EXERCISE;
+        taskFacade.fillTask(taskType, languageUuid, 1);
+
         return WordMapper.entityToDto(savedWord);
     }
 
