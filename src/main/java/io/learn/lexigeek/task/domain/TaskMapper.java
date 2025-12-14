@@ -1,10 +1,13 @@
 package io.learn.lexigeek.task.domain;
 
+import io.learn.lexigeek.common.utils.DateTimeUtils;
 import io.learn.lexigeek.task.dto.TaskDto;
 import io.learn.lexigeek.task.dto.TaskScheduleDto;
 import io.learn.lexigeek.task.dto.TaskSettingsDto;
 import io.learn.lexigeek.task.dto.TaskTypeSettings;
 import lombok.experimental.UtilityClass;
+
+import java.time.LocalDateTime;
 
 @UtilityClass
 class TaskMapper {
@@ -32,9 +35,16 @@ class TaskMapper {
     }
 
     TaskScheduleDto scheduleEntityToDto(final TaskSchedule schedule) {
+        final LocalDateTime utcDateTime = LocalDateTime.now()
+                .withHour(schedule.getHour())
+                .withMinute(schedule.getMinute());
+        final LocalDateTime warsawDateTime = DateTimeUtils.toLocalDateTime(
+                utcDateTime.toInstant(java.time.ZoneOffset.UTC)
+        );
+
         return new TaskScheduleDto(
-                schedule.getHour(),
-                schedule.getMinute(),
+                warsawDateTime.getHour(),
+                warsawDateTime.getMinute(),
                 schedule.getFrequency(),
                 schedule.getFrequencyValue(),
                 schedule.getLastRunAt()
@@ -53,8 +63,14 @@ class TaskMapper {
     }
 
     void updateScheduleFromDto(final TaskSchedule schedule, final TaskScheduleDto dto) {
-        schedule.setHour(dto.hour());
-        schedule.setMinute(dto.minute());
+        final LocalDateTime warsawDateTime = LocalDateTime.now()
+                .withHour(dto.hour())
+                .withMinute(dto.minute());
+
+        final LocalDateTime utcDateTime = DateTimeUtils.toUTCDateTimeFromDefaultDateTime(warsawDateTime);
+
+        schedule.setHour(utcDateTime.getHour());
+        schedule.setMinute(utcDateTime.getMinute());
         schedule.setFrequency(dto.frequency());
         schedule.setFrequencyValue(dto.frequencyValue());
     }
