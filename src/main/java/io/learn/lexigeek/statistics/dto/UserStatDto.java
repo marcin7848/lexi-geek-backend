@@ -1,10 +1,12 @@
 package io.learn.lexigeek.statistics.dto;
 
+import java.time.LocalDate;
 import java.util.Map;
+import java.util.UUID;
 
-public record UserStatDto(String date,
+public record UserStatDto(LocalDate date,
                           Integer repeat,
                           Integer add,
                           Integer stars,
-                          Map<String, LanguageStats> languageBreakdown) {
+                          Map<UUID, LanguageStats> languageStats) {
 }

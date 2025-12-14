@@ -8,7 +8,6 @@ import io.learn.lexigeek.statistics.dto.LanguageStats;
 import io.learn.lexigeek.statistics.dto.UserStatDto;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.DateStatItem;
-import io.learn.lexigeek.word.dto.LanguageStatItem;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,15 +29,15 @@ public class StatisticsService implements StatisticsFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserStatDto> getUserStatistics(final String startDate,
-                                               final String endDate,
+    public List<UserStatDto> getUserStatistics(final LocalDate startDate,
+                                               final LocalDate endDate,
                                                final List<UUID> languageUuids,
                                                final Boolean showTotal,
                                                final Boolean showStars) {
         final UUID accountUuid = getCurrentAccountUuid();
 
-        final LocalDate start = startDate != null ? LocalDate.parse(startDate, DATE_FORMATTER) : LocalDate.now().minusYears(1);
-        final LocalDate end = endDate != null ? LocalDate.parse(endDate, DATE_FORMATTER) : LocalDate.now();
+        final LocalDate start = startDate != null ? startDate : LocalDate.now().minusYears(1);
+        final LocalDate end = endDate != null ? endDate : LocalDate.now();
 
         final List<LocalDate> dateRange = start.datesUntil(end.plusDays(1)).toList();
 
@@ -48,10 +47,6 @@ public class StatisticsService implements StatisticsFacade {
         final List<DateStatItem> wordCreationData =
                 wordFacade.getWordCreationStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
 
-        // Convert to Maps for easier lookup
-        final Map<LocalDate, Map<UUID, Integer>> statsMap = convertToMap(wordStatsData);
-        final Map<LocalDate, Map<UUID, Integer>> creationMap = convertToMap(wordCreationData);
-
         final Map<LocalDate, Integer> starsData = new HashMap<>();
         if (showStars == null || showStars) {
             final List<AccountStarsDto> starsList = accountFacade.getStars(new DateRangeForm(start, end));
@@ -59,44 +54,27 @@ public class StatisticsService implements StatisticsFacade {
         }
 
         return dateRange.stream()
-                .map(date -> buildUserStatDto(date, statsMap, creationMap, starsData, showTotal, showStars))
+                .map(date -> buildUserStatDto(date, wordStatsData, wordCreationData, starsData, showTotal, showStars))
                 .filter(this::hasData)
                 .collect(Collectors.toList());
     }
 
-    private Map<LocalDate, Map<UUID, Integer>> convertToMap(final List<DateStatItem> dateStatItems) {
-        final Map<LocalDate, Map<UUID, Integer>> result = new HashMap<>();
 
-        for (DateStatItem dateItem : dateStatItems) {
-            final Map<UUID, Integer> languageMap = new HashMap<>();
-            for (LanguageStatItem langItem : dateItem.languageStats()) {
-                languageMap.put(langItem.languageUuid(), langItem.count());
-            }
-            result.put(dateItem.date(), languageMap);
-        }
+    private UserStatDto buildUserStatDto(final LocalDate date,
+                                         final List<DateStatItem> wordStatsData,
+                                         final List<DateStatItem> wordCreationData,
+                                         final Map<LocalDate, Integer> starsData,
+                                         final Boolean showTotal,
+                                         final Boolean showStars) {
+        final Map<UUID, Integer> statsForDate = findStatsForDate(wordStatsData, date);
+        final Map<UUID, Integer> creationForDate = findStatsForDate(wordCreationData, date);
 
-        return result;
-    }
+        final Set<UUID> languageUuids = new HashSet<>();
+        languageUuids.addAll(statsForDate.keySet());
+        languageUuids.addAll(creationForDate.keySet());
 
-    private UserStatDto buildUserStatDto(
-            final LocalDate date,
-            final Map<LocalDate, Map<UUID, Integer>> wordStatsData,
-            final Map<LocalDate, Map<UUID, Integer>> wordCreationData,
-            final Map<LocalDate, Integer> starsData,
-            final Boolean showTotal,
-            final Boolean showStars
-    ) {
-        final Map<UUID, Integer> statsForDate = wordStatsData.getOrDefault(date, new HashMap<>());
-        final Map<UUID, Integer> creationForDate = wordCreationData.getOrDefault(date, new HashMap<>());
-
-        // Combine all language UUIDs
-        final Set<UUID> allLanguageUuids = new HashSet<>();
-        allLanguageUuids.addAll(statsForDate.keySet());
-        allLanguageUuids.addAll(creationForDate.keySet());
-
-        // Build language breakdown
-        final Map<String, LanguageStats> languageBreakdown = new HashMap<>();
-        for (UUID langUuid : allLanguageUuids) {
+        final Map<UUID, LanguageStats> languageStats = new HashMap<>();
+        for (final UUID langUuid : languageUuids) {
             final Integer repeatCount = statsForDate.getOrDefault(langUuid, 0);
             final Integer addCount = creationForDate.getOrDefault(langUuid, 0);
 
@@ -104,10 +82,9 @@ public class StatisticsService implements StatisticsFacade {
                     repeatCount,
                     addCount
             );
-            languageBreakdown.put(langUuid.toString(), langStats);
+            languageStats.put(langUuid, langStats);
         }
 
-        // Calculate totals
         Integer totalRepeat = null;
         Integer totalAdd = null;
 
@@ -123,12 +100,25 @@ public class StatisticsService implements StatisticsFacade {
         final Integer stars = (showStars == null || showStars) ? starsData.get(date) : null;
 
         return new UserStatDto(
-                date.format(DATE_FORMATTER),
+                date,
                 totalRepeat,
                 totalAdd,
                 stars,
-                languageBreakdown
+                languageStats
         );
+    }
+
+    private Map<UUID, Integer> findStatsForDate(final List<DateStatItem> dateStatItems, final LocalDate date) {
+        return dateStatItems.stream()
+                .filter(item -> item.date().equals(date))
+                .findFirst()
+                .map(item -> {
+                    final Map<UUID, Integer> result = new HashMap<>();
+                    item.languageStats().forEach(langStat ->
+                            result.put(langStat.languageUuid(), langStat.count()));
+                    return result;
+                })
+                .orElse(new HashMap<>());
     }
 
     private boolean hasData(final UserStatDto dto) {

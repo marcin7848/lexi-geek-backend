@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,8 +25,8 @@ class StatisticsController {
     private final StatisticsFacade statisticsFacade;
 
     @GetMapping(Routes.STATISTICS)
-    List<UserStatDto> getUserStatistics(@RequestParam(required = false) final String startDate,
-                                        @RequestParam(required = false) final String endDate,
+    List<UserStatDto> getUserStatistics(@RequestParam(required = false) final LocalDate startDate,
+                                        @RequestParam(required = false) final LocalDate endDate,
                                         @RequestParam(required = false) final List<UUID> languageUuids,
                                         @RequestParam(required = false) final Boolean showTotal,
                                         @RequestParam(required = false) final Boolean showStars) {
