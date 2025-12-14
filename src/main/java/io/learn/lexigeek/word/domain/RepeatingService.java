@@ -141,17 +141,19 @@ class RepeatingService implements RepeatingFacade {
         wordStats.setAnswerTime(LocalDateTime.now());
         word.addWordStats(wordStats);
 
-        if (correct && shouldRemoveWordFromQueue(word, session.getMethod())) {
-            final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
-            updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
-            session.setWordQueue(updatedQueue);
-
+        if (correct) {
             final CategoryMode categoryMode = word.getCategories().stream().findFirst().orElseThrow().getMode();
             final TaskType taskType = categoryMode == CategoryMode.DICTIONARY
                     ? TaskType.REPEAT_DICTIONARY
                     : TaskType.REPEAT_EXERCISE;
 
             taskFacade.fillTask(taskType, languageUuid, 1);
+
+            if(shouldRemoveWordFromQueue(word, session.getMethod())){
+                final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
+                updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
+                session.setWordQueue(updatedQueue);
+            }
         }
 
         wordRepository.save(word);
