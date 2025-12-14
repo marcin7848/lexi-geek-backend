@@ -52,6 +52,7 @@ CREATE TABLE task_schedules
     minute          INTEGER     NOT NULL DEFAULT 0,
     frequency       VARCHAR(50) NOT NULL DEFAULT 'DAILY',
     frequency_value INTEGER,
+    last_run_at     TIMESTAMP WITHOUT TIME ZONE,
     account_id      BIGINT      NOT NULL
         CONSTRAINT fk_task_schedules_account REFERENCES accounts (id) ON DELETE CASCADE,
     CONSTRAINT unique_task_schedule_account UNIQUE (account_id),

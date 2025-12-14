@@ -39,4 +39,7 @@ class TaskSchedule extends AbstractUuidEntity {
 
     @Column(name = "frequency_value")
     private Integer frequencyValue;
+
+    @Column(name = "last_run_at")
+    private java.time.LocalDateTime lastRunAt;
 }
