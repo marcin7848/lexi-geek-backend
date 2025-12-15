@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotNull;
 
 public record ActivityForm(@NotNull ActivityType type,
                            @NotBlank String languageName,
-                           @NotBlank String categoryName,
+                           String categoryName,
                            String param) {
 }

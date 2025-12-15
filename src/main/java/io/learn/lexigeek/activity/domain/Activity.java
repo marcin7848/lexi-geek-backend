@@ -27,7 +27,7 @@ class Activity extends AbstractUuidEntity {
     @Column(name = "language_name", nullable = false, length = 255)
     private String languageName;
 
-    @Column(name = "category_name", nullable = false, length = 255)
+    @Column(name = "category_name", length = 255)
     private String categoryName;
 
     @Column(name = "param", length = 255)
