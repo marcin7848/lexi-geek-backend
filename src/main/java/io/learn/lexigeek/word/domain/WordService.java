@@ -274,33 +274,33 @@ class WordService implements WordFacade {
                 languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
         );
 
-        return buildDateStatItems(results);
+        return buildDateStatItems(results, null);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DateStatItem> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
-                                                                  final LocalDate startDate,
-                                                                  final LocalDate endDate,
-                                                                  final List<UUID> languageUuids) {
-        final List<WordStatsProjection> results = wordStatsRepository.findWordRepeatStatsByDateAndLanguage(
+    public List<WordStatsProjection> getAllWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                                            final LocalDate startDate,
+                                                                            final LocalDate endDate,
+                                                                            final List<UUID> languageUuids) {
+        return wordStatsRepository.findWordRepeatStatsByDateAndLanguage(
                 accountUuid,
                 startDate,
                 endDate,
                 languageUuids != null && !languageUuids.isEmpty() ? languageUuids : null
         );
-
-        return buildDateStatItems(results);
     }
 
-    private List<DateStatItem> buildDateStatItems(final List<WordStatsProjection> projections) {
+    private List<DateStatItem> buildDateStatItems(final List<WordStatsProjection> projections, final Boolean correctFilter) {
         final Map<LocalDate, List<LanguageStatItem>> groupedByDate = new HashMap<>();
 
         for (final WordStatsProjection projection : projections) {
-            final LocalDate date = projection.getDate();
-            final LanguageStatItem item = new LanguageStatItem(projection.getLanguageUuid(), projection.getCount());
+            if (correctFilter == null || projection.getCorrect().equals(correctFilter)) {
+                final LocalDate date = projection.getDate();
+                final LanguageStatItem item = new LanguageStatItem(projection.getLanguageUuid(), projection.getCount());
 
-            groupedByDate.computeIfAbsent(date, d -> new ArrayList<>()).add(item);
+                groupedByDate.computeIfAbsent(date, d -> new ArrayList<>()).add(item);
+            }
         }
 
         return groupedByDate.entrySet().stream()

@@ -14,15 +14,14 @@ import java.util.UUID;
 interface WordStatsRepository extends UUIDAwareJpaRepository<WordStats, Long> {
 
     @Query("""
-            SELECT CAST(ws.answerTime AS LocalDate) as date, c.language.uuid as languageUuid, COUNT(ws.id) as count
+            SELECT CAST(ws.answerTime AS LocalDate) as date, c.language.uuid as languageUuid, ws.correct as correct, COUNT(ws.id) as count
             FROM WordStats ws
             JOIN ws.word w
             JOIN w.categories c
             WHERE c.language.account.uuid = :accountUuid
                 AND CAST(ws.answerTime AS LocalDate) BETWEEN :startDate AND :endDate
                 AND (:languageUuids IS NULL OR c.language.uuid IN :languageUuids)
-                AND ws.correct = true
-            GROUP BY CAST(ws.answerTime AS LocalDate), c.language.uuid
+            GROUP BY CAST(ws.answerTime AS LocalDate), c.language.uuid, ws.correct
             """)
     List<WordStatsProjection> findWordRepeatStatsByDateAndLanguage(@Param("accountUuid") final UUID accountUuid,
                                                                    @Param("startDate") final LocalDate startDate,

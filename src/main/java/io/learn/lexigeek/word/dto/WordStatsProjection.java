@@ -8,5 +8,7 @@ public interface WordStatsProjection {
 
     UUID getLanguageUuid();
 
+    Boolean getCorrect();
+
     Integer getCount();
 }

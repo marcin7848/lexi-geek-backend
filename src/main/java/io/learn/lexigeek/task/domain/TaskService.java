@@ -2,14 +2,13 @@ package io.learn.lexigeek.task.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.activity.ActivityFacade;
+import io.learn.lexigeek.activity.domain.ActivityType;
+import io.learn.lexigeek.activity.dto.ActivityForm;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.task.TaskFacade;
-import io.learn.lexigeek.task.dto.TaskConfigDto;
-import io.learn.lexigeek.task.dto.TaskDto;
-import io.learn.lexigeek.task.dto.TaskScheduleDto;
-import io.learn.lexigeek.task.dto.TaskSettingsDto;
-import io.learn.lexigeek.task.dto.TaskType;
+import io.learn.lexigeek.task.dto.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +29,7 @@ public class TaskService implements TaskFacade {
     private final AccountRepository accountRepository;
     private final LanguageRepository languageRepository;
     private final AccountFacade accountFacade;
+    private final ActivityFacade activityFacade;
 
     @Override
     public List<TaskDto> getTasks() {
@@ -72,6 +73,15 @@ public class TaskService implements TaskFacade {
             if (task.getCurrent() >= task.getMaximum()) {
                 final int bonusStars = task.getStarsReward();
                 totalBonusStars += bonusStars;
+
+                final String languageName = task.getLanguage().getName();
+                final String title = task.getType().name();
+                final ActivityForm activityForm = new ActivityForm(
+                        ActivityType.STARS_ADDED,
+                        languageName,
+                        title,
+                        String.valueOf(bonusStars));
+                activityFacade.addActivity(accountDto.id(), activityForm);
             }
         }
 
@@ -195,7 +205,7 @@ public class TaskService implements TaskFacade {
 
     @Override
     @Transactional
-    public void fillTask(final TaskType taskType, final java.util.UUID languageUuid, final Integer points) {
+    public void fillTask(final TaskType taskType, final UUID languageUuid, final Integer points) {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
         final Language language = languageRepository.findByUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
@@ -205,5 +215,21 @@ public class TaskService implements TaskFacade {
 
         task.setCurrent(task.getCurrent() + points);
         taskRepository.save(task);
+    }
+
+    @Override
+    @Transactional
+    public void initializeTasksForLanguage(final java.util.UUID languageUuid) {
+        final AccountDto accountDto = accountFacade.getLoggedAccount();
+        final Language language = languageRepository.findByUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
+
+        final TaskSettings settings = createDefaultSettings(language, accountDto);
+        taskSettingsRepository.save(settings);
+
+        final Account account = accountRepository.findById(accountDto.id())
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, accountDto.uuid()));
+        final List<Task> tasks = generateTasksForLanguage(settings, account);
+        taskRepository.saveAll(tasks);
     }
 }

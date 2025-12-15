@@ -1,5 +1,10 @@
 package io.learn.lexigeek.word.domain;
 
+import io.learn.lexigeek.account.AccountFacade;
+import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.activity.ActivityFacade;
+import io.learn.lexigeek.activity.domain.ActivityType;
+import io.learn.lexigeek.activity.dto.ActivityForm;
 import io.learn.lexigeek.category.domain.CategoryMethod;
 import io.learn.lexigeek.category.domain.CategoryMode;
 import io.learn.lexigeek.common.exception.AlreadyExistsException;
@@ -29,6 +34,8 @@ class RepeatingService implements RepeatingFacade {
     private final WordRepository wordRepository;
     private final LanguageFacade languageFacade;
     private final TaskFacade taskFacade;
+    private final ActivityFacade activityFacade;
+    private final AccountFacade accountFacade;
 
     @Override
     @Transactional
@@ -149,7 +156,7 @@ class RepeatingService implements RepeatingFacade {
 
             taskFacade.fillTask(taskType, languageUuid, 1);
 
-            if(shouldRemoveWordFromQueue(word, session.getMethod())){
+            if (shouldRemoveWordFromQueue(word, session.getMethod())) {
                 final List<Word> updatedQueue = new ArrayList<>(session.getWordQueue());
                 updatedQueue.removeIf(w -> w.getUuid().equals(wordUuid));
                 session.setWordQueue(updatedQueue);
@@ -165,6 +172,11 @@ class RepeatingService implements RepeatingFacade {
             repeatSessionRepository.save(session);
         } else {
             repeatSessionRepository.delete(session);
+
+            final AccountDto account = accountFacade.getLoggedAccount();
+            final Language language = languageRepository.findByUuid(languageUuid)
+                    .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
+            activityFacade.addActivity(account.id(), new ActivityForm(ActivityType.REPEATING_FINISHED, language.getName(), null, null));
         }
 
         return new CheckAnswerResultDto(correct, wordsLeft, sessionActive, answerResult.answerDetails());

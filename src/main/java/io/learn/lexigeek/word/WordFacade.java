@@ -33,8 +33,8 @@ public interface WordFacade {
                                                              final LocalDate endDate,
                                                              final List<UUID> languageUuids);
 
-    List<DateStatItem> getWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
-                                                           final LocalDate startDate,
-                                                           final LocalDate endDate,
-                                                           final List<UUID> languageUuids);
+    List<WordStatsProjection> getAllWordRepeatStatsByDateAndLanguage(final UUID accountUuid,
+                                                                     final LocalDate startDate,
+                                                                     final LocalDate endDate,
+                                                                     final List<UUID> languageUuids);
 }
