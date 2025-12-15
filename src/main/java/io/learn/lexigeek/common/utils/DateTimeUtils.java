@@ -33,6 +33,7 @@ public class DateTimeUtils {
     public static final String OFFSET_DATE_TIME_DEFAULT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     public static final ZoneId DEFAULT_TIME_ZONE_ID = ZoneId.of("Europe/Warsaw");
     public static final String DEFAULT_LOCAL_TIME_FORMAT = "HH:mm";
+    public static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public static LocalDateTime timestampUTC() {
         return LocalDateTime.now(Clock.systemUTC());
