@@ -18,6 +18,9 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants
 class Language extends AbstractUuidEntity {
 
+    @Column(name = "name", nullable = false, length = 20)
+    private String name;
+
     @Column(name = "shortcut", nullable = false, length = 10)
     private String shortcut;
 
