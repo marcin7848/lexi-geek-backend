@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity(name = "TaskAccount")
+@Entity(name = "ActivityAccount")
 @Table(name = "accounts")
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 @Setter
