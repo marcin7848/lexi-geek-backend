@@ -5,11 +5,7 @@ import io.learn.lexigeek.account.dto.AccountDto;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.task.TaskFacade;
-import io.learn.lexigeek.task.dto.TaskConfigDto;
-import io.learn.lexigeek.task.dto.TaskDto;
-import io.learn.lexigeek.task.dto.TaskScheduleDto;
-import io.learn.lexigeek.task.dto.TaskSettingsDto;
-import io.learn.lexigeek.task.dto.TaskType;
+import io.learn.lexigeek.task.dto.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -195,7 +192,7 @@ public class TaskService implements TaskFacade {
 
     @Override
     @Transactional
-    public void fillTask(final TaskType taskType, final java.util.UUID languageUuid, final Integer points) {
+    public void fillTask(final TaskType taskType, final UUID languageUuid, final Integer points) {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
         final Language language = languageRepository.findByUuid(languageUuid)
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
