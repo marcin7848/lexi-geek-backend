@@ -8,6 +8,8 @@ import io.learn.lexigeek.statistics.dto.LanguageStats;
 import io.learn.lexigeek.statistics.dto.UserStatDto;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.DateStatItem;
+import io.learn.lexigeek.word.dto.LanguageStatItem;
+import io.learn.lexigeek.word.dto.WordStatsProjection;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,11 +39,14 @@ public class StatisticsService implements StatisticsFacade {
 
         final List<LocalDate> dateRange = start.datesUntil(end.plusDays(1)).toList();
 
-        final List<DateStatItem> wordStatsData =
-                wordFacade.getWordRepeatStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
-
         final List<DateStatItem> wordCreationData =
                 wordFacade.getWordCreationStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
+
+        final List<WordStatsProjection> allRepeatStats =
+                wordFacade.getAllWordRepeatStatsByDateAndLanguage(accountUuid, start, end, languageUuids);
+
+        final List<DateStatItem> wordStatsData = buildDateStatItemsFiltered(allRepeatStats, true);
+        final List<DateStatItem> wordErrorsData = buildDateStatItemsFiltered(allRepeatStats, false);
 
         final Map<LocalDate, Integer> starsData = new HashMap<>();
         if (showStars == null || showStars) {
@@ -50,43 +55,52 @@ public class StatisticsService implements StatisticsFacade {
         }
 
         return dateRange.stream()
-                .map(date -> buildUserStatDto(date, wordStatsData, wordCreationData, starsData, showTotal, showStars))
+                .map(date -> buildUserStatDto(date, wordStatsData, wordCreationData, wordErrorsData, starsData, showTotal, showStars))
                 .toList();
     }
 
     private UserStatDto buildUserStatDto(final LocalDate date,
                                          final List<DateStatItem> wordStatsData,
                                          final List<DateStatItem> wordCreationData,
+                                         final List<DateStatItem> wordErrorsData,
                                          final Map<LocalDate, Integer> starsData,
                                          final Boolean showTotal,
                                          final Boolean showStars) {
         final Map<UUID, Integer> statsForDate = findStatsForDate(wordStatsData, date);
         final Map<UUID, Integer> creationForDate = findStatsForDate(wordCreationData, date);
+        final Map<UUID, Integer> errorsForDate = findStatsForDate(wordErrorsData, date);
 
         final Set<UUID> languageUuids = new HashSet<>();
         languageUuids.addAll(statsForDate.keySet());
         languageUuids.addAll(creationForDate.keySet());
+        languageUuids.addAll(errorsForDate.keySet());
 
         final Map<UUID, LanguageStats> languageStats = new HashMap<>();
         for (final UUID langUuid : languageUuids) {
             final Integer repeatCount = statsForDate.getOrDefault(langUuid, 0);
             final Integer addCount = creationForDate.getOrDefault(langUuid, 0);
+            final Integer errorsCount = errorsForDate.getOrDefault(langUuid, 0);
 
             final LanguageStats langStats = new LanguageStats(
                     repeatCount,
-                    addCount
+                    addCount,
+                    errorsCount
             );
             languageStats.put(langUuid, langStats);
         }
 
         Integer totalRepeat = null;
         Integer totalAdd = null;
+        Integer totalErrors = null;
 
         if (showTotal == null || showTotal) {
             totalRepeat = statsForDate.values().stream()
                     .mapToInt(Integer::intValue)
                     .sum();
             totalAdd = creationForDate.values().stream()
+                    .mapToInt(Integer::intValue)
+                    .sum();
+            totalErrors = errorsForDate.values().stream()
                     .mapToInt(Integer::intValue)
                     .sum();
         }
@@ -98,6 +112,7 @@ public class StatisticsService implements StatisticsFacade {
                 totalRepeat,
                 totalAdd,
                 stars,
+                totalErrors,
                 languageStats
         );
     }
@@ -113,6 +128,24 @@ public class StatisticsService implements StatisticsFacade {
                     return result;
                 })
                 .orElse(new HashMap<>());
+    }
+
+    private List<DateStatItem> buildDateStatItemsFiltered(final List<WordStatsProjection> projections,
+                                                          final boolean correctFilter) {
+        final Map<LocalDate, List<LanguageStatItem>> groupedByDate = new HashMap<>();
+
+        for (final WordStatsProjection projection : projections) {
+            if (projection.getCorrect() != null && projection.getCorrect() == correctFilter) {
+                final LocalDate date = projection.getDate();
+                final LanguageStatItem item = new LanguageStatItem(projection.getLanguageUuid(), projection.getCount());
+                groupedByDate.computeIfAbsent(date, d -> new ArrayList<>()).add(item);
+            }
+        }
+
+        return groupedByDate.entrySet().stream()
+                .map(entry -> new DateStatItem(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(DateStatItem::date))
+                .toList();
     }
 
     private UUID getCurrentAccountUuid() {

@@ -8,5 +8,6 @@ public record UserStatDto(LocalDate date,
                           Integer repeat,
                           Integer add,
                           Integer stars,
+                          Integer repeatErrors,
                           Map<UUID, LanguageStats> languageStats) {
 }
