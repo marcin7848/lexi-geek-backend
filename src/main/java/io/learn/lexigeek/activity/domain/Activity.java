@@ -30,6 +30,9 @@ class Activity extends AbstractUuidEntity {
     @Column(name = "category_name", nullable = false, length = 255)
     private String categoryName;
 
+    @Column(name = "param", length = 255)
+    private String param;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;

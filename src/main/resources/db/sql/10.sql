@@ -9,6 +9,7 @@ CREATE TABLE activities
     type          VARCHAR(30)                 NOT NULL,
     language_name VARCHAR(255)                NOT NULL,
     category_name VARCHAR(255)                NOT NULL,
+    param         VARCHAR(255),
     account_id    BIGINT                      NOT NULL
         CONSTRAINT fk_activities_account REFERENCES accounts (id) ON DELETE CASCADE
 );

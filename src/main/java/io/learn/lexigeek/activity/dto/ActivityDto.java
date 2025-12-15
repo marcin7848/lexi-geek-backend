@@ -5,6 +5,7 @@ import java.util.UUID;
 public record ActivityDto(UUID uuid,
                           String languageName,
                           String categoryName,
-                          String timestamp,
-                          String type) {
+                          String created,
+                          String type,
+                          String param) {
 }
