@@ -2,6 +2,9 @@ package io.learn.lexigeek.task.domain;
 
 import io.learn.lexigeek.account.AccountFacade;
 import io.learn.lexigeek.account.dto.AccountDto;
+import io.learn.lexigeek.activity.ActivityFacade;
+import io.learn.lexigeek.activity.domain.ActivityType;
+import io.learn.lexigeek.activity.dto.ActivityForm;
 import io.learn.lexigeek.common.exception.NotFoundException;
 import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.task.TaskFacade;
@@ -26,6 +29,7 @@ public class TaskService implements TaskFacade {
     private final AccountRepository accountRepository;
     private final LanguageRepository languageRepository;
     private final AccountFacade accountFacade;
+    private final ActivityFacade activityFacade;
 
     @Override
     public List<TaskDto> getTasks() {
@@ -69,6 +73,15 @@ public class TaskService implements TaskFacade {
             if (task.getCurrent() >= task.getMaximum()) {
                 final int bonusStars = task.getStarsReward();
                 totalBonusStars += bonusStars;
+
+                final String languageName = task.getLanguage().getName();
+                final String title = task.getType().name();
+                final ActivityForm activityForm = new ActivityForm(
+                        ActivityType.STARS_ADDED,
+                        languageName,
+                        title,
+                        String.valueOf(bonusStars));
+                activityFacade.addActivity(accountDto.id(), activityForm);
             }
         }
 
