@@ -13,7 +13,7 @@ class ActivityMapper {
         return new ActivityDto(
                 activity.getUuid(),
                 activity.getLanguageName(),
-                activity.getCategoryName(),
+                activity.getTitle(),
                 ISO_FORMATTER.format(activity.getCreated()),
                 activity.getType().name(),
                 activity.getParam());
@@ -23,7 +23,7 @@ class ActivityMapper {
         final Activity activity = new Activity();
         activity.setType(form.type());
         activity.setLanguageName(form.languageName());
-        activity.setCategoryName(form.categoryName());
+        activity.setTitle(form.title());
         activity.setParam(form.param());
         return activity;
     }

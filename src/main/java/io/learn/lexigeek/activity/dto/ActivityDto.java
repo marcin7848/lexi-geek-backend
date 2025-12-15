@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record ActivityDto(UUID uuid,
                           String languageName,
-                          String categoryName,
+                          String title,
                           String created,
                           String type,
                           String param) {
