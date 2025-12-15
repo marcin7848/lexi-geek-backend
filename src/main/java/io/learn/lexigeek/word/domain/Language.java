@@ -24,6 +24,9 @@ class Language extends AbstractUuidEntity {
     @Column(name = "shortcut", nullable = false, length = 10)
     private String shortcut;
 
+    @Column(name = "code_for_translator", nullable = false, length = 10)
+    private String codeForTranslator;
+
     @Column(name = "public", nullable = false)
     private boolean isPublic;
 

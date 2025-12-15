@@ -2,6 +2,8 @@
 package io.learn.lexigeek.word.domain;
 
 import io.learn.lexigeek.category.CategoryFacade;
+import io.learn.lexigeek.common.exception.NotFoundException;
+import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.word.AutomaticTranslationFacade;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.AutoTranslateForm;
@@ -23,14 +25,18 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
     private final CategoryFacade categoryFacade;
     private final WordFacade wordFacade;
+    private final LanguageRepository languageRepository;
 
     @Override
     public void autoTranslate(final UUID languageUuid, final UUID categoryUuid, final AutoTranslateForm form) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
+        final Language language = languageRepository.findByUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
+
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
         final List<AutomaticTranslationWord> translatedWords = words.stream()
-                .map(word -> translate(form.method(), word))
+                .map(word -> translate(form.method(), word, language.getCodeForTranslator()))
                 .toList();
 
         final List<WordForm> wordForms = mapToWordForms(translatedWords);
@@ -60,7 +66,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                 .toList();
     }
 
-    private AutomaticTranslationWord translate(final AutomaticTranslationMethod method, final AutomaticTranslationWord word) {
+    private AutomaticTranslationWord translate(final AutomaticTranslationMethod method, final AutomaticTranslationWord word, final String codeForTranslator) {
         // TODO: Implement actual translation logic based on the method
         return new AutomaticTranslationWord(word.question(), List.of("translated_" + word.question()));
     }
