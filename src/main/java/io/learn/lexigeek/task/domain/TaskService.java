@@ -206,4 +206,20 @@ public class TaskService implements TaskFacade {
         task.setCurrent(task.getCurrent() + points);
         taskRepository.save(task);
     }
+
+    @Override
+    @Transactional
+    public void initializeTasksForLanguage(final java.util.UUID languageUuid) {
+        final AccountDto accountDto = accountFacade.getLoggedAccount();
+        final Language language = languageRepository.findByUuid(languageUuid)
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
+
+        final TaskSettings settings = createDefaultSettings(language, accountDto);
+        taskSettingsRepository.save(settings);
+
+        final Account account = accountRepository.findById(accountDto.id())
+                .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, accountDto.uuid()));
+        final List<Task> tasks = generateTasksForLanguage(settings, account);
+        taskRepository.saveAll(tasks);
+    }
 }

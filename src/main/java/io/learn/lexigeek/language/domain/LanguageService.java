@@ -13,6 +13,7 @@ import io.learn.lexigeek.language.dto.LanguageDto;
 import io.learn.lexigeek.language.dto.LanguageFilterForm;
 import io.learn.lexigeek.language.dto.LanguageForm;
 import io.learn.lexigeek.language.dto.ShortcutDto;
+import io.learn.lexigeek.task.TaskFacade;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class LanguageService implements LanguageFacade {
     private final LanguageRepository languageRepository;
     private final AccountRepository accountRepository;
     private final AccountFacade accountFacade;
+    private final TaskFacade taskFacade;
 
     @Override
     public PageDto<LanguageDto> getLanguages(final LanguageFilterForm form, final PageableRequest pageableRequest) {
@@ -43,6 +45,7 @@ public class LanguageService implements LanguageFacade {
     }
 
     @Override
+    @Transactional
     public void createLanguage(final LanguageForm form) {
         final AccountDto accountDto = accountFacade.getLoggedAccount();
         final Language language = LanguageMapper.formToEntity(form);
@@ -50,6 +53,7 @@ public class LanguageService implements LanguageFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.USER_NOT_FOUND, accountDto.id()));
         language.setAccount(account);
         languageRepository.save(language);
+        taskFacade.initializeTasksForLanguage(language.getUuid());
     }
 
     @Override

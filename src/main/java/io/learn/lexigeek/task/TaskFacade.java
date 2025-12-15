@@ -21,4 +21,6 @@ public interface TaskFacade {
     void updateTaskConfig(final TaskConfigDto config);
 
     void fillTask(final TaskType taskType, final UUID languageUuid, final Integer points);
+
+    void initializeTasksForLanguage(final UUID languageUuid);
 }
