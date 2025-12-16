@@ -23,9 +23,12 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class AutomaticTranslationService implements AutomaticTranslationFacade {
 
+    private static final String POLISH_LANGUAGE_CODE = "pl";
+
     private final CategoryFacade categoryFacade;
     private final WordFacade wordFacade;
     private final LanguageRepository languageRepository;
+    private final TranslationService translationService;
 
     @Override
     public void autoTranslate(final UUID languageUuid, final UUID categoryUuid, final AutoTranslateForm form) {
@@ -35,7 +38,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                 .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
 
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
-        final List<AutomaticTranslationWord> translatedWords = words.stream()
+        final List<AutomaticTranslationWord> translatedWords = words.parallelStream()
                 .map(word -> translate(form.method(), word, language.getCodeForTranslator()))
                 .toList();
 
@@ -43,7 +46,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
         wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
     }
 
-    private List<AutomaticTranslationWord> splitTextIntoWords(String text) {
+    private List<AutomaticTranslationWord> splitTextIntoWords(final String text) {
         return Arrays.stream(text.split("\\s+"))
                 .map(word -> word.replaceAll("[^a-zA-Z0-9]", ""))
                 .filter(word -> !word.isEmpty())
@@ -67,7 +70,10 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
     }
 
     private AutomaticTranslationWord translate(final AutomaticTranslationMethod method, final AutomaticTranslationWord word, final String codeForTranslator) {
-        // TODO: Implement actual translation logic based on the method
-        return new AutomaticTranslationWord(word.question(), List.of("translated_" + word.question()));
+        final String originalWord = word.question();
+        final String translatedWord = translationService.translate(originalWord, codeForTranslator, POLISH_LANGUAGE_CODE);
+
+        // Translated word goes to 'question', original word goes to 'answers'
+        return new AutomaticTranslationWord(translatedWord, List.of(originalWord));
     }
 }
