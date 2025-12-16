@@ -11,6 +11,7 @@ import io.learn.lexigeek.word.dto.WordForm;
 import io.learn.lexigeek.word.dto.WordPartForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class AutomaticTranslationService implements AutomaticTranslationFacade {
 
@@ -31,6 +33,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
     @Override
     public void autoTranslate(final UUID languageUuid, final UUID categoryUuid, final AutoTranslateForm form) {
+        log.info("Starting translation");
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
@@ -53,7 +56,9 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
 
             final List<WordForm> wordForms = mapToWordForms(translatedWords);
+            log.info("Inserting words");
             wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
+            log.info("Words inserted");
         }
     }
 
@@ -82,7 +87,10 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
     private AutomaticTranslationWord translate(final AutomaticTranslationWord word, final String sourceLanguage,
                                                final String targetLanguage, final SourcePart sourcePart) {
         final String originalWord = word.question();
+        log.info("Translating word: {}", originalWord);
         final String translatedWord = translationService.translate(originalWord, sourceLanguage, targetLanguage);
+
+        log.info("Finished translating word: {}", originalWord);
 
         if (sourcePart == SourcePart.QUESTION) {
             return new AutomaticTranslationWord(originalWord, translatedWord);
