@@ -1,9 +1,8 @@
 
 package io.learn.lexigeek.word.domain;
 
+import com.google.common.util.concurrent.RateLimiter;
 import io.learn.lexigeek.category.CategoryFacade;
-import io.learn.lexigeek.common.exception.NotFoundException;
-import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.word.AutomaticTranslationFacade;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.AutoTranslateForm;
@@ -12,13 +11,14 @@ import io.learn.lexigeek.word.dto.WordForm;
 import io.learn.lexigeek.word.dto.WordPartForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.util.RateLimiter;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 @Service
@@ -35,23 +35,26 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
 
-        final RateLimiter rateLimiter = RateLimiter.create(3.0);
+        final RateLimiter rateLimiter = RateLimiter.create(50); // 50 requests / second
 
-        final List<CompletableFuture<AutomaticTranslationWord>> futures =
-                words.stream()
-                        .map(word -> CompletableFuture.supplyAsync(() -> {
-                            rateLimiter.acquire();
-                            return translate(word, form.sourceLanguage(), form.targetLanguage(), form.sourcePart());
-                        }, executor))
-                        .toList();
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            final List<CompletableFuture<AutomaticTranslationWord>> futures =
+                    words.stream()
+                            .map(word -> CompletableFuture.supplyAsync(() -> {
+                                rateLimiter.acquire();
+                                return translate(word, form.sourceLanguage(), form.targetLanguage(), form.sourcePart());
+                            }, executor))
+                            .toList();
 
-        final List<AutomaticTranslationWord> translatedWords =
-                futures.stream()
-                        .map(CompletableFuture::join)
-                        .toList();
+            final List<AutomaticTranslationWord> translatedWords =
+                    futures.stream()
+                            .map(CompletableFuture::join)
+                            .toList();
 
-        final List<WordForm> wordForms = mapToWordForms(translatedWords);
-        wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
+
+            final List<WordForm> wordForms = mapToWordForms(translatedWords);
+            wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
+        }
     }
 
     private List<AutomaticTranslationWord> splitTextIntoWords(final String text) {
