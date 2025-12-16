@@ -32,7 +32,8 @@ class MyMemoryTranslationService implements TranslationService {
 
             final Map<String, Object> body = response.getBody();
             if (body == null) {
-                return text;
+                log.warn("Translation failed for '{}': empty response body", text);
+                return null;
             }
 
             final Map<String, Object> responseData =
@@ -41,11 +42,15 @@ class MyMemoryTranslationService implements TranslationService {
             final String translatedText =
                     responseData != null ? (String) responseData.get("translatedText") : null;
 
-            return translatedText != null ? translatedText : text;
+            if (translatedText == null) {
+                log.warn("Translation failed for '{}': no translated text in response", text);
+            }
+
+            return translatedText;
 
         } catch (final Exception e) {
-            log.error("Error translating '{}'", text, e);
-            return text;
+            log.error("Error translating '{}': {}", text, e.getMessage());
+            return null;
         }
     }
 }

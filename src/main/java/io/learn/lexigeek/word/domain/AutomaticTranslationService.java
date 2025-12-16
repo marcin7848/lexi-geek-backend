@@ -51,8 +51,10 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
             final List<AutomaticTranslationWord> translatedWords =
                     futures.stream()
                             .map(CompletableFuture::join)
+                            .filter(word -> word.answer() != null && !word.answer().isEmpty())
                             .toList();
 
+            log.info("Successfully translated {} out of {} words", translatedWords.size(), words.size());
 
             final List<WordForm> wordForms = mapToWordForms(translatedWords);
             wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
@@ -86,6 +88,11 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                                                final String targetLanguage, final SourcePart sourcePart) {
         final String originalWord = word.question();
         final String translatedWord = translationService.translate(originalWord, sourceLanguage, targetLanguage);
+
+        if (translatedWord == null) {
+            log.warn("Skipping word '{}' due to translation failure", originalWord);
+            return new AutomaticTranslationWord(originalWord, null);
+        }
 
         if (sourcePart == SourcePart.QUESTION) {
             return new AutomaticTranslationWord(originalWord, translatedWord);
