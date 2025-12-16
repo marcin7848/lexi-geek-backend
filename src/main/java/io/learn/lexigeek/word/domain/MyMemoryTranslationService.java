@@ -27,23 +27,18 @@ class MyMemoryTranslationService implements TranslationService {
     @SuppressWarnings("unchecked")
     public String translate(final String text, final String sourceLanguage, final String targetLanguage) {
         try {
-            // Encode the text for URL
-            String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8);
-            String langPair = sourceLanguage + "|" + targetLanguage;
+            final String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8);
+            final String langPair = sourceLanguage + "|" + targetLanguage;
 
-            // Build the full URL
-            String url = String.format("%s?q=%s&langpair=%s", API_URL, encodedText, langPair);
+            final String url = String.format("%s?q=%s&langpair=%s", API_URL, encodedText, langPair);
 
-            log.debug("Translating '{}' from {} to {}", text, sourceLanguage, targetLanguage);
-            // Make the API call
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            final ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = response.getBody();
+                final Map<String, Object> body = response.getBody();
 
-                // Extract translatedText from responseData
                 if (body.containsKey("responseData")) {
-                    Map<String, Object> responseData = (Map<String, Object>) body.get("responseData");
+                    final Map<String, Object> responseData = (Map<String, Object>) body.get("responseData");
                     if (responseData != null && responseData.containsKey("translatedText")) {
                         String translatedText = (String) responseData.get("translatedText");
                         log.debug("Translation result: '{}'", translatedText);
@@ -53,11 +48,11 @@ class MyMemoryTranslationService implements TranslationService {
             }
 
             log.warn("Failed to translate '{}': Invalid response", text);
-            return text; // Return original text if translation fails
+            return text;
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             log.error("Error translating text '{}': {}", text, e.getMessage(), e);
-            return text; // Return original text if translation fails
+            return text;
         }
     }
 }
