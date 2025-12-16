@@ -7,6 +7,7 @@ import io.learn.lexigeek.common.validation.ErrorCodes;
 import io.learn.lexigeek.word.AutomaticTranslationFacade;
 import io.learn.lexigeek.word.WordFacade;
 import io.learn.lexigeek.word.dto.AutoTranslateForm;
+import io.learn.lexigeek.word.dto.SourcePart;
 import io.learn.lexigeek.word.dto.WordForm;
 import io.learn.lexigeek.word.dto.WordPartForm;
 import lombok.AccessLevel;
@@ -16,14 +17,11 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class AutomaticTranslationService implements AutomaticTranslationFacade {
-
-    private static final String POLISH_LANGUAGE_CODE = "pl";
 
     private final CategoryFacade categoryFacade;
     private final WordFacade wordFacade;
@@ -39,7 +37,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
         final List<AutomaticTranslationWord> translatedWords = words.parallelStream()
-                .map(word -> translate(word, language.getShortcut()))
+                .map(word -> translate(word, form.sourceLanguage(), form.targetLanguage(), form.sourcePart()))
                 .toList();
 
         final List<WordForm> wordForms = mapToWordForms(translatedWords);
@@ -50,7 +48,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
         return Arrays.stream(text.split("\\s+"))
                 .map(word -> word.replaceAll("[^a-zA-Z0-9]", ""))
                 .filter(word -> !word.isEmpty())
-                .map(word -> new AutomaticTranslationWord(word, List.of()))
+                .map(word -> new AutomaticTranslationWord(word, ""))
                 .toList();
     }
 
@@ -60,8 +58,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                     final List<WordPartForm> wordParts =
                             Stream.concat(
                                     Stream.of(new WordPartForm(false, null, 0, false, false, null, tw.question())),
-                                    IntStream.range(0, tw.answers().size())
-                                            .mapToObj(i -> new WordPartForm(true, null, i + 1, true, false, null, tw.answers().get(i)))
+                                    Stream.of(new WordPartForm(true, null, 1, true, false, null, tw.answer()))
                             ).toList();
 
                     return new WordForm(null, WordMechanism.BASIC, wordParts);
@@ -69,11 +66,15 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                 .toList();
     }
 
-    private AutomaticTranslationWord translate(final AutomaticTranslationWord word, final String languageCode) {
+    private AutomaticTranslationWord translate(final AutomaticTranslationWord word, final String sourceLanguage,
+                                               final String targetLanguage, final SourcePart sourcePart) {
         final String originalWord = word.question();
-        final String translatedWord = translationService.translate(originalWord, languageCode, POLISH_LANGUAGE_CODE);
+        final String translatedWord = translationService.translate(originalWord, sourceLanguage, targetLanguage);
 
-        // Translated word goes to 'question', original word goes to 'answers'
-        return new AutomaticTranslationWord(translatedWord, List.of(originalWord));
+        if (sourcePart == SourcePart.QUESTION) {
+            return new AutomaticTranslationWord(originalWord, translatedWord);
+        }
+
+        return new AutomaticTranslationWord(translatedWord, originalWord);
     }
 }
