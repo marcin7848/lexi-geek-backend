@@ -12,11 +12,13 @@ import io.learn.lexigeek.word.dto.WordForm;
 import io.learn.lexigeek.word.dto.WordPartForm;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.util.RateLimiter;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 @Service
@@ -25,20 +27,28 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
     private final CategoryFacade categoryFacade;
     private final WordFacade wordFacade;
-    private final LanguageRepository languageRepository;
     private final TranslationService translationService;
 
     @Override
     public void autoTranslate(final UUID languageUuid, final UUID categoryUuid, final AutoTranslateForm form) {
         categoryFacade.verifyCategoryAccess(languageUuid, categoryUuid);
 
-        final Language language = languageRepository.findByUuid(languageUuid)
-                .orElseThrow(() -> new NotFoundException(ErrorCodes.LANGUAGE_NOT_FOUND, languageUuid));
-
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
-        final List<AutomaticTranslationWord> translatedWords = words.parallelStream()
-                .map(word -> translate(word, form.sourceLanguage(), form.targetLanguage(), form.sourcePart()))
-                .toList();
+
+        final RateLimiter rateLimiter = RateLimiter.create(3.0);
+
+        final List<CompletableFuture<AutomaticTranslationWord>> futures =
+                words.stream()
+                        .map(word -> CompletableFuture.supplyAsync(() -> {
+                            rateLimiter.acquire();
+                            return translate(word, form.sourceLanguage(), form.targetLanguage(), form.sourcePart());
+                        }, executor))
+                        .toList();
+
+        final List<AutomaticTranslationWord> translatedWords =
+                futures.stream()
+                        .map(CompletableFuture::join)
+                        .toList();
 
         final List<WordForm> wordForms = mapToWordForms(translatedWords);
         wordForms.forEach(wordForm -> wordFacade.createWord(languageUuid, categoryUuid, wordForm));
