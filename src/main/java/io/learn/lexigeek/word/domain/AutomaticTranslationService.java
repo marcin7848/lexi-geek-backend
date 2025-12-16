@@ -63,6 +63,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
         return Arrays.stream(text.split("\\s+"))
                 .map(word -> word.replaceAll("[^a-zA-Z0-9]", ""))
                 .filter(word -> !word.isEmpty())
+                .distinct()
                 .map(word -> new AutomaticTranslationWord(word, ""))
                 .toList();
     }
