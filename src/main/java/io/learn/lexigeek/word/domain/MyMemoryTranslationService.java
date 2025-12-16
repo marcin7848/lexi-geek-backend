@@ -10,10 +10,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-/**
- * Implementation using MyMemory Translation API (free, no API key required)
- * API documentation: <a href="https://mymemory.translated.net/doc/spec.php">MyMemory API Docs</a>
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,24 +30,21 @@ class MyMemoryTranslationService implements TranslationService {
 
             final ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
 
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                final Map<String, Object> body = response.getBody();
-
-                if (body.containsKey("responseData")) {
-                    final Map<String, Object> responseData = (Map<String, Object>) body.get("responseData");
-                    if (responseData != null && responseData.containsKey("translatedText")) {
-                        String translatedText = (String) responseData.get("translatedText");
-                        log.debug("Translation result: '{}'", translatedText);
-                        return translatedText;
-                    }
-                }
+            final Map<String, Object> body = response.getBody();
+            if (body == null) {
+                return text;
             }
 
-            log.warn("Failed to translate '{}': Invalid response", text);
-            return text;
+            final Map<String, Object> responseData =
+                    (Map<String, Object>) body.get("responseData");
+
+            final String translatedText =
+                    responseData != null ? (String) responseData.get("translatedText") : null;
+
+            return translatedText != null ? translatedText : text;
 
         } catch (final Exception e) {
-            log.error("Error translating text '{}': {}", text, e.getMessage(), e);
+            log.error("Error translating '{}'", text, e);
             return text;
         }
     }
