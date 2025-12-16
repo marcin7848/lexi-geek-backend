@@ -39,7 +39,7 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
 
         final List<AutomaticTranslationWord> words = splitTextIntoWords(form.text());
         final List<AutomaticTranslationWord> translatedWords = words.parallelStream()
-                .map(word -> translate(form.method(), word, language.getCodeForTranslator()))
+                .map(word -> translate(form.method(), word, language.getShortcut()))
                 .toList();
 
         final List<WordForm> wordForms = mapToWordForms(translatedWords);
@@ -69,9 +69,9 @@ class AutomaticTranslationService implements AutomaticTranslationFacade {
                 .toList();
     }
 
-    private AutomaticTranslationWord translate(final AutomaticTranslationMethod method, final AutomaticTranslationWord word, final String codeForTranslator) {
+    private AutomaticTranslationWord translate(final AutomaticTranslationMethod method, final AutomaticTranslationWord word, final String languageCode) {
         final String originalWord = word.question();
-        final String translatedWord = translationService.translate(originalWord, codeForTranslator, POLISH_LANGUAGE_CODE);
+        final String translatedWord = translationService.translate(originalWord, languageCode, POLISH_LANGUAGE_CODE);
 
         // Translated word goes to 'question', original word goes to 'answers'
         return new AutomaticTranslationWord(translatedWord, List.of(originalWord));

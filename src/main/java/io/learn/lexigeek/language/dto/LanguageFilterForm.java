@@ -6,7 +6,6 @@ public record LanguageFilterForm(UUID uuid,
                                  String name,
                                  String shortcut,
                                  String codeForSpeech,
-                                 String codeForTranslator,
                                  Boolean isPublic,
                                  String specialLetters) {
 }
