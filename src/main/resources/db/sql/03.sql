@@ -17,5 +17,6 @@ CREATE TABLE "categories"
 
 CREATE INDEX IF NOT EXISTS idx_categories_category_parent_id ON categories (parent_id);
 CREATE INDEX IF NOT EXISTS idx_categories_language_id ON categories (language_id);
+CREATE INDEX IF NOT EXISTS idx_categories_uuid ON categories (uuid);
 
 --rollback DROP TABLE "categories";

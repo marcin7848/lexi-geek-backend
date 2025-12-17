@@ -7,6 +7,7 @@ buildscript {
         archUnitVersion = "1.4.1"
         jsonwebtokenVersion = "0.12.6"
         springWebVersion = "7.0.0-RC3"
+        guavaVersion = "33.5.0-jre"
     }
 }
 
@@ -56,6 +57,9 @@ dependencies {
 
     //database
     implementation group: 'org.postgresql', name: 'postgresql', version: postgresVersion
+
+    //others
+    implementation group: 'com.google.guava', name: 'guava', version: guavaVersion
 
     //test
     testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: springBootVersion

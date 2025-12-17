@@ -14,8 +14,9 @@ CREATE TABLE activities
         CONSTRAINT fk_activities_account REFERENCES accounts (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_activities_account ON activities (account_id);
-CREATE INDEX idx_activities_created ON activities (created);
-CREATE INDEX idx_activities_type ON activities (type);
+CREATE INDEX IF NOT EXISTS idx_activities_account ON activities (account_id);
+CREATE INDEX IF NOT EXISTS idx_activities_created ON activities (created);
+CREATE INDEX IF NOT EXISTS idx_activities_type ON activities (type);
+CREATE INDEX IF NOT EXISTS idx_activities_uuid ON activities (uuid);
 
 --rollback DROP TABLE "activities";

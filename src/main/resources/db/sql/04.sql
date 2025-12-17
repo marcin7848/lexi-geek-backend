@@ -43,6 +43,7 @@ CREATE TABLE "word_parts"
 
 CREATE INDEX IF NOT EXISTS idx_word_parts_word_id ON word_parts (word_id);
 CREATE INDEX IF NOT EXISTS idx_word_parts_word_id_position ON word_parts (word_id, position);
+CREATE INDEX IF NOT EXISTS idx_word_parts_uuid ON word_parts (uuid);
 
 CREATE TABLE "word_stats"
 (
@@ -56,6 +57,7 @@ CREATE TABLE "word_stats"
 );
 
 CREATE INDEX IF NOT EXISTS idx_word_stats_word_id ON word_stats (word_id);
+CREATE INDEX IF NOT EXISTS idx_word_stats_uuid ON word_stats (uuid);
 
 --rollback DROP TABLE "word_stats";
 --rollback DROP TABLE "word_parts";

@@ -40,8 +40,9 @@ CREATE TABLE task_settings
     CONSTRAINT unique_task_settings_language_account UNIQUE (language_id, account_id)
 );
 
-CREATE INDEX idx_task_settings_account ON task_settings (account_id);
-CREATE INDEX idx_task_settings_language ON task_settings (language_id);
+CREATE INDEX IF NOT EXISTS idx_task_settings_account ON task_settings (account_id);
+CREATE INDEX IF NOT EXISTS idx_task_settings_language ON task_settings (language_id);
+CREATE INDEX IF NOT EXISTS idx_account_stars_uuid ON account_stars (uuid);
 
 CREATE TABLE task_schedules
 (
@@ -60,7 +61,8 @@ CREATE TABLE task_schedules
     CONSTRAINT check_minute CHECK (minute >= 0 AND minute <= 59)
 );
 
-CREATE INDEX idx_task_schedules_account ON task_schedules (account_id);
+CREATE INDEX IF NOT EXISTS idx_task_schedules_account ON task_schedules (account_id);
+CREATE INDEX IF NOT EXISTS idx_task_schedules_uuid ON task_schedules (uuid);
 
 --rollback DROP TABLE "task_schedules";
 --rollback DROP TABLE "task_settings";
