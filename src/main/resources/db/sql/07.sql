@@ -11,7 +11,8 @@ CREATE TABLE repeat_sessions
         CONSTRAINT fk_repeat_session_language REFERENCES languages (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_repeat_sessions_language ON repeat_sessions (language_id);
+CREATE INDEX IF NOT EXISTS idx_repeat_sessions_language ON repeat_sessions (language_id);
+CREATE INDEX IF NOT EXISTS idx_repeat_sessions_uuid ON repeat_sessions (uuid);
 
 CREATE TABLE repeat_session_words
 (
@@ -21,8 +22,8 @@ CREATE TABLE repeat_session_words
         CONSTRAINT fk_repeat_session_words_word REFERENCES words (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_repeat_session_words_session ON repeat_session_words (repeat_session_id);
-CREATE INDEX idx_repeat_session_words_word ON repeat_session_words (word_id);
+CREATE INDEX IF NOT EXISTS idx_repeat_session_words_session ON repeat_session_words (repeat_session_id);
+CREATE INDEX IF NOT EXISTS idx_repeat_session_words_word ON repeat_session_words (word_id);
 
 --rollback DROP TABLE "repeat_sessions";
 --rollback DROP TABLE "repeat_session_words";

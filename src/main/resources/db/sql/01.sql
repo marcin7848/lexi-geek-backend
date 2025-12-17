@@ -10,4 +10,6 @@ CREATE TABLE "accounts"
     password VARCHAR(72)  NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_accounts_uuid ON accounts (uuid);
+
 --rollback DROP TABLE "accounts";

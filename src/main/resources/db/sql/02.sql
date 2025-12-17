@@ -17,5 +17,6 @@ CREATE TABLE "languages"
 
 CREATE INDEX IF NOT EXISTS idx_languages_shortcut ON languages (shortcut);
 CREATE INDEX IF NOT EXISTS idx_languages_account_id ON languages (account_id);
+CREATE INDEX IF NOT EXISTS idx_languages_uuid ON languages (uuid);
 
 --rollback DROP TABLE "languages";

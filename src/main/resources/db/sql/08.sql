@@ -11,7 +11,8 @@ CREATE TABLE account_stars
         CONSTRAINT fk_account_stars_account REFERENCES accounts (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_account_stars_account ON account_stars (account_id);
-CREATE INDEX idx_account_stars_created ON account_stars (created);
+CREATE INDEX IF NOT EXISTS idx_account_stars_account ON account_stars (account_id);
+CREATE INDEX IF NOT EXISTS idx_account_stars_created ON account_stars (created);
+CREATE INDEX IF NOT EXISTS idx_account_stars_uuid ON account_stars (uuid);
 
 --rollback DROP TABLE "account_stars";
