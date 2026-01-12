@@ -65,6 +65,7 @@ jobs:
             docker rm ${{ env.DOCKER_IMAGE_NAME }} || true
             docker run -d \
                 --name lexi-geek-backend \
+                --restart unless-stopped \
                 --network shared-network \
                 -p 8000:8000 \
                 -e POSTGRES_HOST="${{ secrets.POSTGRES_HOST }}" \
